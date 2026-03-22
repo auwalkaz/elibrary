@@ -1,0 +1,2392 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .upload-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .upload-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .form-section {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #1a3c1a;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #1a3c1a;
+        box-shadow: 0 0 0 3px rgba(26, 60, 26, 0.1);
+    }
+    
+    .form-input.border-red-500 {
+        border-color: #ef4444;
+        background-color: #fef2f2;
+    }
+    
+    .form-input.border-yellow-500 {
+        border-color: #eab308;
+        background-color: #fefce8;
+    }
+    
+    .form-input.border-green-500 {
+        border-color: #10b981;
+        background-color: #f0fdf4;
+    }
+    
+    .form-input.border-blue-500 {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    
+    .input-group {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .required::after {
+        content: '*';
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+    
+    .optional {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: normal;
+        margin-left: 0.5rem;
+    }
+    
+    .file-upload-area {
+        border: 2px dashed #1a3c1a;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        background: rgba(26, 60, 26, 0.05);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .file-upload-area:hover {
+        background: rgba(26, 60, 26, 0.1);
+        border-color: #2d5a2d;
+    }
+    
+    .btn-upload {
+        background: linear-gradient(135deg, #1a3c1a, #2d5a2d);
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 1rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+    
+    .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-upload i {
+        margin-right: 0.5rem;
+    }
+    
+    .preview-image {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+        border: 3px solid #1a3c1a;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .cover-note {
+        background: #e8f0fe;
+        border-left: 4px solid #1a3c1a;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #1f2937;
+    }
+    
+    .cover-note i {
+        color: #1a3c1a;
+        margin-right: 0.5rem;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+        background-color: #1a3c1a;
+    }
+    
+    input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+    }
+    
+    .setting-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .setting-row:last-child {
+        border-bottom: none;
+    }
+    
+    .setting-info {
+        flex: 1;
+    }
+    
+    .setting-info h4 {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .setting-info p {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .badge-info {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .badge-success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .badge-warning {
+        background: #fed7aa;
+        color: #92400e;
+    }
+    
+    .classification-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .copy-entry {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .copy-entry .remove-copy {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        color: #ef4444;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .copy-entry .remove-copy:hover {
+        background: #fee2e2;
+    }
+    
+    .add-copy-btn {
+        background: #f3f4f6;
+        border: 2px dashed #9ca3af;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        color: #4b5563;
+        transition: all 0.2s ease;
+    }
+    
+    .add-copy-btn:hover {
+        background: #e5e7eb;
+        border-color: #1a3c1a;
+        color: #1a3c1a;
+    }
+
+    .csrf-debug {
+        background: #f0f9ff;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border-left: 4px solid #1a3c1a;
+        font-size: 0.9rem;
+    }
+    
+    .csrf-debug .success {
+        color: #059669;
+        font-weight: 600;
+    }
+    
+    .csrf-debug .error {
+        color: #dc2626;
+        font-weight: 600;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    .error-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .error-message i {
+        font-size: 0.875rem;
+    }
+    
+    .warning-message {
+        color: #b45309;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .success-message {
+        color: #059669;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .info-message {
+        color: #1e40af;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .field-error {
+        border-color: #dc2626;
+        background-color: #fef2f2;
+    }
+    
+    .field-warning {
+        border-color: #b45309;
+        background-color: #fffbeb;
+    }
+    
+    .field-success {
+        border-color: #059669;
+        background-color: #f0fdf4;
+    }
+    
+    .field-info {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    
+    /* Scanner status indicator */
+    .scanner-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        background: #e8f0fe;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        color: #1e40af;
+        transition: all 0.2s ease;
+    }
+    
+    .scanner-status i {
+        font-size: 0.75rem;
+    }
+    
+    .scanner-status.active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .scanner-status.warning {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    .scanner-status.scanning {
+        background: #fef3c7;
+        color: #92400e;
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+    
+    /* Barcode preview */
+    .barcode-preview {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-family: monospace;
+        font-size: 1.1rem;
+        letter-spacing: 2px;
+    }
+    
+    /* Lookup result card */
+    .lookup-result {
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .lookup-result i {
+        font-size: 2rem;
+        color: #059669;
+    }
+    
+    .lookup-result .content {
+        flex: 1;
+    }
+    
+    .lookup-result .title {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .lookup-result .details {
+        font-size: 0.875rem;
+        color: #4b5563;
+        margin-top: 0.25rem;
+    }
+    
+    .lookup-result .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #1a3c1a;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Quick scan bar */
+    .quick-scan-bar {
+        background: linear-gradient(135deg, #1a3c1a, #2d5a2d);
+        color: white;
+        padding: 1rem;
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .quick-scan-bar i {
+        font-size: 2rem;
+    }
+    
+    .quick-scan-bar .scan-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .quick-scan-bar .scan-input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .quick-scan-bar .scan-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .quick-scan-bar .scan-hint {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">📤 Upload New Book</h1>
+        <p class="text-white/80">Add a new book to the library collection</p>
+    </div>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-lg flex items-start gap-3 
+                    {% if category == 'error' %}bg-red-100 text-red-700 border-l-4 border-red-500
+                    {% elif category == 'success' %}bg-green-100 text-green-700 border-l-4 border-green-500
+                    {% else %}bg-blue-100 text-blue-700 border-l-4 border-blue-500{% endif %}">
+                    <i class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} text-xl"></i>
+                    <div>{{ message }}</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- CSRF Debug Info (Remove in production) -->
+    <div class="csrf-debug">
+        <strong>🔒 CSRF Protection Status:</strong> 
+        {% if csrf_token() %}
+            <span class="success">✓ Active - Token Generated</span>
+            <small style="display: block; color: #4b5563; margin-top: 5px; word-break: break-all;">
+                Token preview: {{ csrf_token()[:30] }}...
+            </small>
+        {% else %}
+            <span class="error">✗ ERROR - Token NOT Generated!</span>
+            <small style="display: block; color: #dc2626; margin-top: 5px;">
+                Please check Flask-WTF configuration and SECRET_KEY setting.
+            </small>
+        {% endif %}
+    </div>
+    
+    <!-- Quick Scan Bar -->
+    <div class="quick-scan-bar">
+        <i class="fas fa-barcode"></i>
+        <div class="flex-1">
+            <input type="text" id="quick-scan-input" class="scan-input w-full" 
+                   placeholder="Scan barcode here to auto-fill book details or add a copy..."
+                   autofocus>
+        </div>
+        <div class="scan-hint">
+            <i class="fas fa-info-circle"></i>
+            Scanner ready - click and scan
+        </div>
+    </div>
+    
+    <div class="upload-card p-8">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.cataloging') }}" id="uploadForm">
+            <!-- ========== CRITICAL: CSRF Protection Token ========== -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <!-- =================================================== -->
+            
+            <!-- Lookup Result Container (hidden by default) -->
+            <div id="lookup-result-container" class="hidden mb-6"></div>
+            
+            <!-- Basic Information Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-info-circle text-green-700 mr-2"></i>
+                    Basic Information
+                </h3>
+                
+                <div class="mb-4">
+                    <label class="form-label required">Book Title</label>
+                    <input type="text" name="title" id="title"
+                           value="{% if form_data and form_data.title %}{{ form_data.title }}{% endif %}"
+                           placeholder="e.g., The Great Gatsby" 
+                           class="form-input {% if error_field == 'title' %}border-red-500 bg-red-50{% endif %}" 
+                           required>
+                    {% if error_field == 'title' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Subtitle</label>
+                    <input type="text" name="subtitle" id="subtitle"
+                           value="{% if form_data and form_data.subtitle %}{{ form_data.subtitle }}{% endif %}"
+                           placeholder="e.g., The Definitive Edition" 
+                           class="form-input {% if error_field == 'subtitle' %}border-red-500 bg-red-50{% endif %}">
+                    {% if error_field == 'subtitle' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label required">Author</label>
+                        <input type="text" name="author" id="author"
+                               value="{% if form_data and form_data.author %}{{ form_data.author }}{% endif %}"
+                               placeholder="e.g., F. Scott Fitzgerald" 
+                               class="form-input {% if error_field == 'author' %}border-red-500 bg-red-50{% endif %}" 
+                               required>
+                        {% if error_field == 'author' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label required">Category</label>
+                        <input type="text" name="category" id="category"
+                               value="{% if form_data and form_data.category %}{{ form_data.category }}{% endif %}"
+                               placeholder="e.g., Fiction, Science" 
+                               class="form-input {% if error_field == 'category' %}border-red-500 bg-red-50{% endif %}" 
+                               required>
+                        {% if error_field == 'category' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Subcategory</label>
+                    <input type="text" name="subcategory" id="subcategory"
+                           value="{% if form_data and form_data.subcategory %}{{ form_data.subcategory }}{% endif %}"
+                           placeholder="e.g., Classic Literature" 
+                           class="form-input {% if error_field == 'subcategory' %}border-red-500 bg-red-50{% endif %}">
+                    {% if error_field == 'subcategory' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label required">Description</label>
+                    <textarea name="description" id="description"
+                              placeholder="Enter a brief description of the book..." 
+                              rows="4" 
+                              class="form-input {% if error_field == 'description' %}border-red-500 bg-red-50{% endif %}" 
+                              required>{% if form_data and form_data.description %}{{ form_data.description }}{% endif %}</textarea>
+                    {% if error_field == 'description' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Book Format Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-book text-green-700 mr-2"></i>
+                    Book Format
+                </h3>
+                
+                <div class="flex space-x-6 mb-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="has_digital" class="form-checkbox h-5 w-5 text-green-700" 
+                               {% if form_data and form_data.has_digital %}checked{% endif %} id="has-digital">
+                        <span class="ml-2 text-gray-700">Digital (PDF/EPUB/MOBI)</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="has_physical" class="form-checkbox h-5 w-5 text-green-700" 
+                               {% if form_data and form_data.has_physical %}checked{% endif %} id="has-physical">
+                        <span class="ml-2 text-gray-700">Physical Copy</span>
+                    </label>
+                </div>
+                
+                <!-- Physical Copy Details with Multiple Copies Support -->
+                <div id="physical-details" style="display: {% if form_data and form_data.has_physical %}block{% else %}none{% endif %};" class="bg-gray-50 p-4 rounded-lg mt-4">
+                    <h4 class="font-medium text-gray-800 mb-3">Physical Copy Details</h4>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Number of Copies</label>
+                        <input type="number" name="total_copies" id="total-copies" 
+                               value="{% if form_data and form_data.total_copies %}{{ form_data.total_copies }}{% else %}1{% endif %}" 
+                               min="0" max="100" class="form-input w-32">
+                        <p class="text-xs text-gray-500 mt-1">Each copy can have its own barcode and location</p>
+                    </div>
+                    
+                    <!-- Multiple Copies Container -->
+                    <div id="copies-container">
+                        <!-- Copy 1 (default) with enhanced barcode field -->
+                        <div class="copy-entry" id="copy-1">
+                            <h5 class="font-medium text-gray-700 mb-2 flex items-center justify-between">
+                                <span>Copy #1</span>
+                                <span class="scanner-status" id="scanner-status-1">
+                                    <i class="fas fa-barcode"></i>
+                                    <span>Scanner ready</span>
+                                </span>
+                            </h5>
+                            <div class="input-group">
+                                <div class="flex-1">
+                                    <label class="form-label">Barcode</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" name="barcode_1" id="barcode_1" 
+                                               value="{% if form_data and form_data.barcode_1 %}{{ form_data.barcode_1 }}{% endif %}" 
+                                               placeholder="Scan or enter barcode" 
+                                               class="form-input flex-1 barcode-field {% if error_field == 'barcode_1' %}border-red-500 bg-red-50{% endif %}"
+                                               data-copy="1"
+                                               autocomplete="off">
+                                        <button type="button" class="generate-barcode-btn bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200" data-copy="1" title="Generate barcode">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                        <button type="button" class="lookup-barcode-btn bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200" data-copy="1" title="Look up barcode">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <div id="barcode-preview-1" class="barcode-preview hidden"></div>
+                                        <div id="barcode-status-1" class="text-xs"></div>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <label class="form-label">Suffix</label>
+                                    <input type="text" name="suffix_1" value="{% if form_data and form_data.suffix_1 %}{{ form_data.suffix_1 }}{% else %}c.1{% endif %}" placeholder="e.g., c.1" class="form-input">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <div class="flex-1">
+                                    <label class="form-label">Shelf Location</label>
+                                    <input type="text" name="shelf_location_1" id="shelf_location_1" value="{% if form_data and form_data.shelf_location_1 %}{{ form_data.shelf_location_1 }}{% endif %}" placeholder="e.g., A-12-3" class="form-input">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="form-label">Floor</label>
+                                    <input type="text" name="floor_1" id="floor_1" value="{% if form_data and form_data.floor_1 %}{{ form_data.floor_1 }}{% endif %}" placeholder="e.g., 2nd Floor" class="form-input">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <div class="flex-1">
+                                    <label class="form-label">Section</label>
+                                    <input type="text" name="section_1" id="section_1" value="{% if form_data and form_data.section_1 %}{{ form_data.section_1 }}{% endif %}" placeholder="e.g., Section A" class="form-input">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="form-label">Condition</label>
+                                    <select name="condition_1" class="form-input">
+                                        <option value="new" {% if not form_data or form_data.condition_1 == 'new' %}selected{% endif %}>New</option>
+                                        <option value="good" {% if form_data and form_data.condition_1 == 'good' %}selected{% endif %}>Good</option>
+                                        <option value="fair" {% if form_data and form_data.condition_1 == 'fair' %}selected{% endif %}>Fair</option>
+                                        <option value="poor" {% if form_data and form_data.condition_1 == 'poor' %}selected{% endif %}>Poor</option>
+                                        <option value="damaged" {% if form_data and form_data.condition_1 == 'damaged' %}selected{% endif %}>Damaged</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <div class="flex-1">
+                                    <label class="form-label">Accession Number</label>
+                                    <input type="text" name="accession_number_1" id="accession_number_1" value="{% if form_data and form_data.accession_number_1 %}{{ form_data.accession_number_1 }}{% endif %}" placeholder="e.g., ACC-2024-001" class="form-input">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="form-label">Copy Number</label>
+                                    <input type="text" name="copy_number_1" value="1" class="form-input" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Another Copy Button -->
+                    <div class="add-copy-btn mt-4" onclick="addCopy()">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Add Another Copy
+                    </div>
+                    
+                    <!-- Quick barcode scanning info -->
+                    <div class="mt-3 p-3 bg-blue-50 rounded-lg flex items-center gap-3">
+                        <i class="fas fa-info-circle text-blue-600"></i>
+                        <div class="text-sm text-blue-800">
+                            <strong>Barcode Scanner Ready:</strong> Click in any barcode field and scan with your barcode scanner. 
+                            The scanner will automatically fill the field and look up the item.
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <h5 class="font-medium text-blue-800 mb-2">Acquisition Information</h5>
+                        <div class="input-group">
+                            <div class="flex-1">
+                                <label class="form-label">Acquisition Type</label>
+                                <select name="acquisition_type" class="form-input">
+                                    <option value="purchase" {% if not form_data or form_data.acquisition_type == 'purchase' %}selected{% endif %}>Purchase</option>
+                                    <option value="donation" {% if form_data and form_data.acquisition_type == 'donation' %}selected{% endif %}>Donation</option>
+                                    <option value="exchange" {% if form_data and form_data.acquisition_type == 'exchange' %}selected{% endif %}>Exchange</option>
+                                    <option value="deposit" {% if form_data and form_data.acquisition_type == 'deposit' %}selected{% endif %}>Deposit</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="form-label">Cost (per copy)</label>
+                                <input type="number" name="cost" step="0.01" 
+                                       value="{% if form_data and form_data.cost %}{{ form_data.cost }}{% endif %}"
+                                       placeholder="e.g., 29.99" class="form-input">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label">Vendor/Source</label>
+                            <input type="text" name="vendor" 
+                                   value="{% if form_data and form_data.vendor %}{{ form_data.vendor }}{% endif %}"
+                                   placeholder="e.g., Amazon, Donor Name" class="form-input">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Classification Numbers Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-hashtag text-green-700 mr-2"></i>
+                    Classification & Identifiers
+                </h3>
+                
+                <div class="classification-grid">
+                    <div>
+                        <label class="form-label">ISBN</label>
+                        <input type="text" name="isbn" id="isbn"
+                               value="{% if form_data and form_data.isbn %}{{ form_data.isbn }}{% endif %}"
+                               placeholder="e.g., 978-3-16-148410-0" 
+                               class="form-input {% if error_field == 'isbn' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'isbn' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">ISSN (for serials)</label>
+                        <input type="text" name="issn" id="issn"
+                               value="{% if form_data and form_data.issn %}{{ form_data.issn }}{% endif %}"
+                               placeholder="e.g., 1234-5678" 
+                               class="form-input {% if error_field == 'issn' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'issn' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">DOI</label>
+                        <input type="text" name="doi" id="doi"
+                               value="{% if form_data and form_data.doi %}{{ form_data.doi }}{% endif %}"
+                               placeholder="e.g., 10.1000/xyz123" 
+                               class="form-input {% if error_field == 'doi' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'doi' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">OCLC Number</label>
+                        <input type="text" name="oclc_number" id="oclc_number"
+                               value="{% if form_data and form_data.oclc_number %}{{ form_data.oclc_number }}{% endif %}"
+                               placeholder="e.g., 12345678" 
+                               class="form-input {% if error_field == 'oclc_number' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'oclc_number' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">LCCN</label>
+                        <input type="text" name="lccn" id="lccn"
+                               value="{% if form_data and form_data.lccn %}{{ form_data.lccn }}{% endif %}"
+                               placeholder="e.g., 12345678" 
+                               class="form-input {% if error_field == 'lccn' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'lccn' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-medium text-gray-800 mb-3">Library Classification</h4>
+                    <div class="input-group">
+                        <div class="flex-1">
+                            <label class="form-label">Dewey Decimal Classification</label>
+                            <input type="text" name="dewey_decimal" id="dewey_decimal"
+                                   value="{% if form_data and form_data.dewey_decimal %}{{ form_data.dewey_decimal }}{% endif %}"
+                                   placeholder="e.g., 355.02" 
+                                   class="form-input {% if error_field == 'dewey_decimal' %}border-red-500 bg-red-50{% endif %}">
+                            {% if error_field == 'dewey_decimal' %}
+                                <div class="error-message">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>{{ error_message }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1">
+                            <label class="form-label">Library of Congress Classification</label>
+                            <input type="text" name="library_of_congress" id="library_of_congress"
+                                   value="{% if form_data and form_data.library_of_congress %}{{ form_data.library_of_congress }}{% endif %}"
+                                   placeholder="e.g., U162 .C53" 
+                                   class="form-input {% if error_field == 'library_of_congress' %}border-red-500 bg-red-50{% endif %}">
+                            {% if error_field == 'library_of_congress' %}
+                                <div class="error-message">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>{{ error_message }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Publication Details -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-info-circle text-green-700 mr-2"></i>
+                    Publication Details
+                </h3>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Publisher</label>
+                        <input type="text" name="publisher" id="publisher"
+                               value="{% if form_data and form_data.publisher %}{{ form_data.publisher }}{% endif %}"
+                               placeholder="e.g., Penguin Books" 
+                               class="form-input {% if error_field == 'publisher' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'publisher' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Publication Year</label>
+                        <input type="number" name="published_year" id="published_year"
+                               value="{% if form_data and form_data.published_year %}{{ form_data.published_year }}{% endif %}"
+                               placeholder="e.g., 1925" 
+                               class="form-input {% if error_field == 'published_year' %}border-red-500 bg-red-50{% endif %}" 
+                               min="1000" max="2026">
+                        {% if error_field == 'published_year' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Edition</label>
+                        <input type="text" name="edition" id="edition"
+                               value="{% if form_data and form_data.edition %}{{ form_data.edition }}{% endif %}"
+                               placeholder="e.g., 2nd Edition" 
+                               class="form-input {% if error_field == 'edition' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'edition' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Volume</label>
+                        <input type="text" name="volume" id="volume"
+                               value="{% if form_data and form_data.volume %}{{ form_data.volume }}{% endif %}"
+                               placeholder="e.g., Vol. 1" 
+                               class="form-input {% if error_field == 'volume' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'volume' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Series</label>
+                        <input type="text" name="series" id="series"
+                               value="{% if form_data and form_data.series %}{{ form_data.series }}{% endif %}"
+                               placeholder="e.g., The Trilogy" 
+                               class="form-input {% if error_field == 'series' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'series' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Number of Pages</label>
+                        <input type="number" name="pages" id="pages"
+                               value="{% if form_data and form_data.pages %}{{ form_data.pages }}{% endif %}"
+                               placeholder="e.g., 320" 
+                               class="form-input {% if error_field == 'pages' %}border-red-500 bg-red-50{% endif %}" 
+                               min="1">
+                        {% if error_field == 'pages' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Dimensions</label>
+                        <input type="text" name="dimensions" id="dimensions"
+                               value="{% if form_data and form_data.dimensions %}{{ form_data.dimensions }}{% endif %}"
+                               placeholder="e.g., 6 x 9 inches" 
+                               class="form-input {% if error_field == 'dimensions' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'dimensions' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Weight (kg)</label>
+                        <input type="number" name="weight" id="weight" step="0.01" 
+                               value="{% if form_data and form_data.weight %}{{ form_data.weight }}{% endif %}"
+                               placeholder="e.g., 0.5" 
+                               class="form-input {% if error_field == 'weight' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'weight' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Binding Type</label>
+                    <select name="binding" class="form-input {% if error_field == 'binding' %}border-red-500 bg-red-50{% endif %}">
+                        <option value="">Select binding</option>
+                        <option value="hardcover" {% if form_data and form_data.binding == 'hardcover' %}selected{% endif %}>Hardcover</option>
+                        <option value="paperback" {% if form_data and form_data.binding == 'paperback' %}selected{% endif %}>Paperback</option>
+                        <option value="spiral" {% if form_data and form_data.binding == 'spiral' %}selected{% endif %}>Spiral-bound</option>
+                        <option value="leather" {% if form_data and form_data.binding == 'leather' %}selected{% endif %}>Leather-bound</option>
+                        <option value="digital" {% if form_data and form_data.binding == 'digital' %}selected{% endif %}>Digital</option>
+                    </select>
+                    {% if error_field == 'binding' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Language</label>
+                    <select name="language" class="form-input {% if error_field == 'language' %}border-red-500 bg-red-50{% endif %}">
+                        <option value="English" {% if not form_data or form_data.language == 'English' %}selected{% endif %}>English</option>
+                        <option value="Spanish" {% if form_data and form_data.language == 'Spanish' %}selected{% endif %}>Spanish</option>
+                        <option value="French" {% if form_data and form_data.language == 'French' %}selected{% endif %}>French</option>
+                        <option value="German" {% if form_data and form_data.language == 'German' %}selected{% endif %}>German</option>
+                        <option value="Chinese" {% if form_data and form_data.language == 'Chinese' %}selected{% endif %}>Chinese</option>
+                        <option value="Japanese" {% if form_data and form_data.language == 'Japanese' %}selected{% endif %}>Japanese</option>
+                        <option value="Arabic" {% if form_data and form_data.language == 'Arabic' %}selected{% endif %}>Arabic</option>
+                        <option value="Hausa" {% if form_data and form_data.language == 'Hausa' %}selected{% endif %}>Hausa</option>
+                        <option value="Yoruba" {% if form_data and form_data.language == 'Yoruba' %}selected{% endif %}>Yoruba</option>
+                        <option value="Igbo" {% if form_data and form_data.language == 'Igbo' %}selected{% endif %}>Igbo</option>
+                    </select>
+                    {% if error_field == 'language' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Original Language</label>
+                        <input type="text" name="original_language" id="original_language"
+                               value="{% if form_data and form_data.original_language %}{{ form_data.original_language }}{% endif %}"
+                               placeholder="e.g., French" 
+                               class="form-input {% if error_field == 'original_language' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'original_language' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Translator</label>
+                        <input type="text" name="translator" id="translator"
+                               value="{% if form_data and form_data.translator %}{{ form_data.translator }}{% endif %}"
+                               placeholder="e.g., John Smith" 
+                               class="form-input {% if error_field == 'translator' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'translator' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tags & Subjects Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-tags text-green-700 mr-2"></i>
+                    Tags & Subjects
+                </h3>
+                
+                <div class="mb-4">
+                    <label class="form-label">Keywords/Tags (comma-separated)</label>
+                    <input type="text" name="keywords" id="keywords"
+                           value="{% if form_data and form_data.keywords %}{{ form_data.keywords }}{% endif %}"
+                           placeholder="e.g., military, history, strategy, tactics" 
+                           class="form-input {% if error_field == 'keywords' %}border-red-500 bg-red-50{% endif %}">
+                    <p class="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+                    {% if error_field == 'keywords' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    {% if popular_tags %}
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        <span class="text-xs text-gray-600">Popular tags:</span>
+                        {% for tag in popular_tags %}
+                        <span class="badge badge-info cursor-pointer hover:bg-blue-200" onclick="addTag('{{ tag[0] }}')">{{ tag[0] }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Subjects (comma-separated)</label>
+                    <input type="text" name="subjects" id="subjects"
+                           value="{% if form_data and form_data.subjects %}{{ form_data.subjects }}{% endif %}"
+                           placeholder="e.g., Military Science, World War II, Leadership" 
+                           class="form-input {% if error_field == 'subjects' %}border-red-500 bg-red-50{% endif %}">
+                    {% if error_field == 'subjects' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Target Audience</label>
+                    <select name="audience" class="form-input {% if error_field == 'audience' %}border-red-500 bg-red-50{% endif %}">
+                        <option value="" {% if not form_data or form_data.audience == '' %}selected{% endif %}>General</option>
+                        <option value="children" {% if form_data and form_data.audience == 'children' %}selected{% endif %}>Children</option>
+                        <option value="young_adult" {% if form_data and form_data.audience == 'young_adult' %}selected{% endif %}>Young Adult</option>
+                        <option value="adult" {% if form_data and form_data.audience == 'adult' %}selected{% endif %}>Adult</option>
+                        <option value="academic" {% if form_data and form_data.audience == 'academic' %}selected{% endif %}>Academic</option>
+                        <option value="professional" {% if form_data and form_data.audience == 'professional' %}selected{% endif %}>Professional</option>
+                    </select>
+                    {% if error_field == 'audience' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Digital Rights Management Section -->
+            <div class="form-section" id="drm-settings">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-digital-tiling text-green-700 mr-2"></i>
+                    Digital Rights Management
+                </h3>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Enable DRM</h4>
+                        <p>Protect digital content with encryption</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="drm_enabled" 
+                               {% if form_data and form_data.drm_enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Allow Download</h4>
+                        <p>Users can download this book</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="allow_download" 
+                               {% if not form_data or form_data.allow_download %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Allow Printing</h4>
+                        <p>Users can print pages from this book</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="allow_print" 
+                               {% if not form_data or form_data.allow_print %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Allow Copy/Paste</h4>
+                        <p>Users can copy text from this book</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="allow_copy" 
+                               {% if not form_data or form_data.allow_copy %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Enable Watermark</h4>
+                        <p>Add user-specific watermark to PDF</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="watermark_enabled" 
+                               {% if form_data and form_data.watermark_enabled %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="form-label">File Format</label>
+                    <select name="file_format" class="form-input">
+                        <option value="pdf" {% if not form_data or form_data.file_format == 'pdf' %}selected{% endif %}>PDF</option>
+                        <option value="epub" {% if form_data and form_data.file_format == 'epub' %}selected{% endif %}>EPUB</option>
+                        <option value="mobi" {% if form_data and form_data.file_format == 'mobi' %}selected{% endif %}>MOBI</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Access Control Settings -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-lock text-green-700 mr-2"></i>
+                    Access Control
+                </h3>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Public Access</h4>
+                        <p>Allow users to read this book without logging in</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="is_public" 
+                               {% if form_data and form_data.is_public %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Require Library Card</h4>
+                        <p>Users must have a valid library card to read this book</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="requires_library_card" 
+                               {% if not form_data or form_data.requires_library_card %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Require Special Request</h4>
+                        <p>Users must request special access to read this book</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="requires_special_request" 
+                               {% if form_data and form_data.requires_special_request %}checked{% endif %} 
+                               id="requires-special">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <!-- Special Request Notes -->
+                <div id="special-request-notes" style="display: {% if form_data and form_data.requires_special_request %}block{% else %}none{% endif %};" class="mt-4">
+                    <label class="form-label">Special Request Notes</label>
+                    <textarea name="special_request_notes" rows="3" 
+                              placeholder="Explain why this book requires special access..." 
+                              class="form-input">{% if form_data and form_data.special_request_notes %}{{ form_data.special_request_notes }}{% endif %}</textarea>
+                </div>
+            </div>
+            
+            <!-- Security Classification Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-shield-alt text-green-700 mr-2"></i>
+                    Security Classification
+                </h3>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Security Classification</label>
+                        <select name="security_classification" class="form-input">
+                            <option value="" {% if not form_data or form_data.security_classification == '' %}selected{% endif %}>None</option>
+                            <option value="unclassified" {% if form_data and form_data.security_classification == 'unclassified' %}selected{% endif %}>Unclassified</option>
+                            <option value="confidential" {% if form_data and form_data.security_classification == 'confidential' %}selected{% endif %}>Confidential</option>
+                            <option value="secret" {% if form_data and form_data.security_classification == 'secret' %}selected{% endif %}>Secret</option>
+                            <option value="top_secret" {% if form_data and form_data.security_classification == 'top_secret' %}selected{% endif %}>Top Secret</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Minimum Clearance Required</label>
+                        <select name="minimum_clearance" class="form-input">
+                            <option value="basic" {% if not form_data or form_data.minimum_clearance == 'basic' %}selected{% endif %}>Basic</option>
+                            <option value="confidential" {% if form_data and form_data.minimum_clearance == 'confidential' %}selected{% endif %}>Confidential</option>
+                            <option value="secret" {% if form_data and form_data.minimum_clearance == 'secret' %}selected{% endif %}>Secret</option>
+                            <option value="top_secret" {% if form_data and form_data.minimum_clearance == 'top_secret' %}selected{% endif %}>Top Secret</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Approved Roles (comma-separated)</label>
+                    <input type="text" name="approved_roles" 
+                           value="{% if form_data and form_data.approved_roles %}{{ form_data.approved_roles }}{% endif %}"
+                           placeholder="e.g., admin, librarian, officer" 
+                           class="form-input">
+                    <p class="text-xs text-gray-500 mt-1">Roles that can access this book regardless of clearance</p>
+                </div>
+            </div>
+            
+            <!-- External Links Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-link text-green-700 mr-2"></i>
+                    External Links
+                    <span class="optional">(Optional)</span>
+                </h3>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">Google Books ID</label>
+                        <input type="text" name="google_books_id" id="google_books_id"
+                               value="{% if form_data and form_data.google_books_id %}{{ form_data.google_books_id }}{% endif %}"
+                               placeholder="e.g., xyz123" 
+                               class="form-input {% if error_field == 'google_books_id' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'google_books_id' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Open Library ID</label>
+                        <input type="text" name="open_library_id" id="open_library_id"
+                               value="{% if form_data and form_data.open_library_id %}{{ form_data.open_library_id }}{% endif %}"
+                               placeholder="e.g., OL123456M" 
+                               class="form-input {% if error_field == 'open_library_id' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'open_library_id' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div class="flex-1">
+                        <label class="form-label">WorldCat ID</label>
+                        <input type="text" name="worldcat_id" id="worldcat_id"
+                               value="{% if form_data and form_data.worldcat_id %}{{ form_data.worldcat_id }}{% endif %}"
+                               placeholder="e.g., 12345678" 
+                               class="form-input {% if error_field == 'worldcat_id' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'worldcat_id' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="form-label">Amazon URL</label>
+                        <input type="url" name="amazon_url" id="amazon_url"
+                               value="{% if form_data and form_data.amazon_url %}{{ form_data.amazon_url }}{% endif %}"
+                               placeholder="https://amazon.com/dp/xxxx" 
+                               class="form-input {% if error_field == 'amazon_url' %}border-red-500 bg-red-50{% endif %}">
+                        {% if error_field == 'amazon_url' %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ error_message }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">Goodreads URL</label>
+                    <input type="url" name="goodreads_url" id="goodreads_url"
+                           value="{% if form_data and form_data.goodreads_url %}{{ form_data.goodreads_url }}{% endif %}"
+                           placeholder="https://goodreads.com/book/xxxx" 
+                           class="form-input {% if error_field == 'goodreads_url' %}border-red-500 bg-red-50{% endif %}">
+                    {% if error_field == 'goodreads_url' %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>{{ error_message }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Book Cover Upload Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-image text-green-700 mr-2"></i>
+                    Book Cover Image
+                    <span class="optional">(Optional)</span>
+                </h3>
+                
+                <div class="cover-note">
+                    <i class="fas fa-info-circle"></i>
+                    Upload a cover image for the book. If no image is provided, a default book icon will be displayed.
+                </div>
+                
+                <div class="file-upload-area" onclick="document.getElementById('cover-file-input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload cover image</p>
+                    <small>or drag and drop</small>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded">PNG, JPG, JPEG, GIF, WEBP (Max 5MB)</span>
+                    </div>
+                </div>
+                
+                <input type="file" id="cover-file-input" name="cover_image" accept="image/*" class="hidden">
+                
+                <div id="cover-file-name" class="text-sm text-gray-600 mt-2 text-center hidden"></div>
+                
+                <!-- Image Preview -->
+                <div id="image-preview" class="flex justify-center mt-4"></div>
+            </div>
+            
+            <!-- Sample File Upload Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-file-alt text-green-700 mr-2"></i>
+                    Sample File
+                    <span class="optional">(Optional)</span>
+                </h3>
+                
+                <div class="cover-note">
+                    <i class="fas fa-info-circle"></i>
+                    Upload a sample excerpt of the book (first few pages) for users to preview.
+                </div>
+                
+                <div class="file-upload-area" onclick="document.getElementById('sample-file-input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload sample file</p>
+                    <small>or drag and drop</small>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded">PDF only (Max 2MB)</span>
+                    </div>
+                </div>
+                
+                <input type="file" id="sample-file-input" name="sample_file" accept=".pdf" class="hidden">
+                <div id="sample-file-name" class="text-sm text-gray-600 mt-2 text-center hidden"></div>
+            </div>
+            
+            <!-- Main Digital File Upload Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-file-pdf text-green-700 mr-2"></i>
+                    Digital Book File
+                    <span class="text-red-500 text-sm ml-2">* Required if Digital format selected</span>
+                </h3>
+                
+                <div class="file-upload-area" id="pdf-upload-area" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload digital book file</p>
+                    <small>or drag and drop</small>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <span class="bg-gray-100 px-2 py-1 rounded">PDF, EPUB, MOBI (Max 100MB)</span>
+                    </div>
+                </div>
+                <input type="file" id="file-input" name="file" accept=".pdf,.epub,.mobi" class="hidden">
+                <div id="file-name" class="text-sm text-gray-600 mt-2 text-center hidden"></div>
+                {% if error_field == 'file_hash' or error_field == 'filename' %}
+                    <div class="error-message mt-2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>{{ error_message }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Book Status Section -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-flag text-green-700 mr-2"></i>
+                    Book Status & Flags
+                    <span class="optional">(Optional)</span>
+                </h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_featured" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_featured %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">🌟 Featured</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_new_arrival" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_new_arrival %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">✨ New Arrival</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_bestseller" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_bestseller %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">📈 Bestseller</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_recommended" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_recommended %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">👍 Recommended</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_restricted" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_restricted %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">🔒 Restricted</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_reference" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_reference %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">📚 Reference Only</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                        <input type="checkbox" name="is_serial" class="form-checkbox h-5 w-5 text-green-700 rounded"
+                               {% if form_data and form_data.is_serial %}checked{% endif %}>
+                        <span class="ml-2 text-sm text-gray-700">📰 Serial Publication</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn-upload">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Upload Book to Library
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+// ==================== GLOBAL VARIABLES ====================
+let copyCount = 1;
+let scanBuffer = '';
+let scanTimer = null;
+let activeScannerField = null;
+
+// ==================== FUNCTION DEFINITIONS ====================
+
+// Function to add tags
+window.addTag = function(tag) {
+    const keywordsInput = document.getElementById('keywords');
+    if (keywordsInput) {
+        const currentValue = keywordsInput.value.trim();
+        if (currentValue) {
+            keywordsInput.value = currentValue + ', ' + tag;
+        } else {
+            keywordsInput.value = tag;
+        }
+    }
+};
+
+// Function to add another copy with barcode scanner support
+function addCopy() {
+    copyCount++;
+    const container = document.getElementById('copies-container');
+    const newCopy = document.createElement('div');
+    newCopy.className = 'copy-entry';
+    newCopy.id = `copy-${copyCount}`;
+    newCopy.innerHTML = `
+        <div class="remove-copy" onclick="removeCopy(${copyCount})">✕</div>
+        <h5 class="font-medium text-gray-700 mb-2 flex items-center justify-between">
+            <span>Copy #${copyCount}</span>
+            <span class="scanner-status" id="scanner-status-${copyCount}">
+                <i class="fas fa-barcode"></i>
+                <span>Scanner ready</span>
+            </span>
+        </h5>
+        <div class="input-group">
+            <div class="flex-1">
+                <label class="form-label">Barcode</label>
+                <div class="flex gap-2">
+                    <input type="text" name="barcode_${copyCount}" id="barcode_${copyCount}" 
+                           placeholder="Scan or enter barcode" 
+                           class="form-input flex-1 barcode-field"
+                           data-copy="${copyCount}"
+                           autocomplete="off">
+                    <button type="button" class="generate-barcode-btn bg-blue-100 text-blue-700 px-3 py-2 rounded-lg hover:bg-blue-200" data-copy="${copyCount}" title="Generate barcode">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button type="button" class="lookup-barcode-btn bg-green-100 text-green-700 px-3 py-2 rounded-lg hover:bg-green-200" data-copy="${copyCount}" title="Look up barcode">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 mt-1">
+                    <div id="barcode-preview-${copyCount}" class="barcode-preview hidden"></div>
+                    <div id="barcode-status-${copyCount}" class="text-xs"></div>
+                </div>
+            </div>
+            <div class="flex-1">
+                <label class="form-label">Suffix</label>
+                <input type="text" name="suffix_${copyCount}" placeholder="e.g., c.${copyCount}" class="form-input" value="c.${copyCount}">
+            </div>
+        </div>
+        <div class="input-group">
+            <div class="flex-1">
+                <label class="form-label">Shelf Location</label>
+                <input type="text" name="shelf_location_${copyCount}" placeholder="e.g., A-12-3" class="form-input">
+            </div>
+            <div class="flex-1">
+                <label class="form-label">Floor</label>
+                <input type="text" name="floor_${copyCount}" placeholder="e.g., 2nd Floor" class="form-input">
+            </div>
+        </div>
+        <div class="input-group">
+            <div class="flex-1">
+                <label class="form-label">Section</label>
+                <input type="text" name="section_${copyCount}" placeholder="e.g., Section A" class="form-input">
+            </div>
+            <div class="flex-1">
+                <label class="form-label">Condition</label>
+                <select name="condition_${copyCount}" class="form-input">
+                    <option value="new" selected>New</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                    <option value="damaged">Damaged</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-group">
+            <div class="flex-1">
+                <label class="form-label">Accession Number</label>
+                <input type="text" name="accession_number_${copyCount}" placeholder="e.g., ACC-2024-001" class="form-input">
+            </div>
+            <div class="flex-1">
+                <label class="form-label">Copy Number</label>
+                <input type="text" name="copy_number_${copyCount}" value="${copyCount}" class="form-input" readonly>
+            </div>
+        </div>
+    `;
+    container.appendChild(newCopy);
+    
+    // Update total copies value
+    document.getElementById('total-copies').value = copyCount;
+    
+    // Attach scanner to the new field
+    attachScannerToField(`barcode_${copyCount}`);
+    
+    // Attach generate button handler
+    document.querySelector(`.generate-barcode-btn[data-copy="${copyCount}"]`).addEventListener('click', function() {
+        generateBarcode(copyCount);
+    });
+    
+    // Attach lookup button handler
+    document.querySelector(`.lookup-barcode-btn[data-copy="${copyCount}"]`).addEventListener('click', function() {
+        const barcodeField = document.getElementById(`barcode_${copyCount}`);
+        if (barcodeField && barcodeField.value) {
+            lookupBarcode(barcodeField.value, copyCount);
+        } else {
+            alert('Please enter or scan a barcode first');
+        }
+    });
+}
+
+// Function to remove a copy
+function removeCopy(copyNum) {
+    if (copyCount > 1) {
+        const copyElement = document.getElementById(`copy-${copyNum}`);
+        if (copyElement) {
+            copyElement.remove();
+            copyCount--;
+            
+            // Update total copies value
+            document.getElementById('total-copies').value = copyCount;
+        }
+    }
+}
+
+// Function to generate a random barcode
+function generateBarcode(copyNum) {
+    const prefix = 'BC';
+    const timestamp = Date.now().toString().slice(-8);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const barcode = `${prefix}-${timestamp}${random}`;
+    
+    const field = document.getElementById(`barcode_${copyNum}`);
+    if (field) {
+        field.value = barcode;
+        field.classList.add('border-green-500', 'bg-green-50');
+        
+        // Show success message
+        const statusEl = document.getElementById(`barcode-status-${copyNum}`);
+        if (statusEl) {
+            statusEl.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle"></i> Barcode generated</span>';
+        }
+        
+        // Show barcode preview
+        const previewEl = document.getElementById(`barcode-preview-${copyNum}`);
+        if (previewEl) {
+            previewEl.textContent = barcode;
+            previewEl.classList.remove('hidden');
+        }
+        
+        // Remove highlight after 3 seconds
+        setTimeout(() => {
+            field.classList.remove('border-green-500', 'bg-green-50');
+        }, 3000);
+    }
+}
+
+// Function to look up barcode using API
+async function lookupBarcode(barcode, copyNum = null) {
+    const resultContainer = document.getElementById('lookup-result-container');
+    resultContainer.innerHTML = '<div class="text-center"><div class="spinner mx-auto"></div><p class="text-sm text-gray-600 mt-2">Looking up barcode...</p></div>';
+    resultContainer.classList.remove('hidden');
+    
+    try {
+        const response = await fetch(`/admin/api/barcode/lookup?barcode=${encodeURIComponent(barcode)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.type === 'book') {
+                // Found an existing book
+                resultContainer.innerHTML = `
+                    <div class="lookup-result">
+                        <i class="fas fa-book"></i>
+                        <div class="content">
+                            <div class="title">📚 Existing Book Found</div>
+                            <div class="details">
+                                <strong>${data.data.title}</strong> by ${data.data.author}<br>
+                                Status: <span class="badge">${data.data.status}</span><br>
+                                Location: ${data.data.location || 'Not specified'}<br>
+                                Copy ID: ${data.data.copy_id}
+                            </div>
+                            <div class="mt-2 flex gap-2">
+                                <button type="button" class="btn-fill-details bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700">
+                                    <i class="fas fa-paste mr-1"></i>Fill Book Details
+                                </button>
+                                <button type="button" class="btn-add-copy bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700">
+                                    <i class="fas fa-plus mr-1"></i>Add as New Copy
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-dismiss ml-auto text-gray-500 hover:text-gray-700" onclick="dismissLookup()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                // Add event listener for fill details button
+                resultContainer.querySelector('.btn-fill-details').addEventListener('click', () => {
+                    fillBookDetails(data.data);
+                    dismissLookup();
+                });
+                
+                // Add event listener for add copy button
+                resultContainer.querySelector('.btn-add-copy').addEventListener('click', () => {
+                    // If we have a specific copy number, fill that field
+                    if (copyNum) {
+                        document.getElementById(`barcode_${copyNum}`).value = barcode;
+                        document.getElementById(`barcode_${copyNum}`).classList.add('border-blue-500', 'bg-blue-50');
+                        
+                        const statusEl = document.getElementById(`barcode-status-${copyNum}`);
+                        if (statusEl) {
+                            statusEl.innerHTML = '<span class="text-blue-600"><i class="fas fa-info-circle"></i> Barcode exists in system</span>';
+                        }
+                    }
+                    dismissLookup();
+                });
+            } else if (data.type === 'patron') {
+                // Found a patron (unlikely in cataloging, but handle anyway)
+                resultContainer.innerHTML = `
+                    <div class="lookup-result">
+                        <i class="fas fa-user"></i>
+                        <div class="content">
+                            <div class="title">👤 Patron Found</div>
+                            <div class="details">
+                                <strong>${data.data.name}</strong><br>
+                                Card: ${data.data.card_number}<br>
+                                Status: ${data.data.card_status}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-dismiss ml-auto text-gray-500 hover:text-gray-700" onclick="dismissLookup()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        } else {
+            // Not found - this is a new barcode
+            resultContainer.innerHTML = `
+                <div class="lookup-result" style="background: #fef3c7; border-color: #f59e0b;">
+                    <i class="fas fa-plus-circle" style="color: #f59e0b;"></i>
+                    <div class="content">
+                        <div class="title">🆕 New Barcode</div>
+                        <div class="details">
+                            <strong>${barcode}</strong><br>
+                            This barcode is not in the system. You can use it for a new book.
+                        </div>
+                    </div>
+                    <button type="button" class="btn-dismiss ml-auto text-gray-500 hover:text-gray-700" onclick="dismissLookup()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // If we have a specific copy number, mark it as new
+            if (copyNum) {
+                const field = document.getElementById(`barcode_${copyNum}`);
+                if (field) {
+                    field.classList.add('border-yellow-500', 'bg-yellow-50');
+                    
+                    const statusEl = document.getElementById(`barcode-status-${copyNum}`);
+                    if (statusEl) {
+                        statusEl.innerHTML = '<span class="text-yellow-600"><i class="fas fa-info-circle"></i> New barcode</span>';
+                    }
+                    
+                    const previewEl = document.getElementById(`barcode-preview-${copyNum}`);
+                    if (previewEl) {
+                        previewEl.textContent = barcode;
+                        previewEl.classList.remove('hidden');
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error looking up barcode:', error);
+        resultContainer.innerHTML = `
+            <div class="lookup-result" style="background: #fee2e2; border-color: #ef4444;">
+                <i class="fas fa-exclamation-circle" style="color: #ef4444;"></i>
+                <div class="content">
+                    <div class="title">❌ Error</div>
+                    <div class="details">
+                        Failed to look up barcode. Please try again.
+                    </div>
+                </div>
+                <button type="button" class="btn-dismiss ml-auto text-gray-500 hover:text-gray-700" onclick="dismissLookup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Function to fill book details from lookup
+function fillBookDetails(bookData) {
+    // Fill basic fields
+    if (bookData.title) document.getElementById('title').value = bookData.title;
+    if (bookData.author) document.getElementById('author').value = bookData.author;
+    
+    // Fill other fields if they exist
+    if (bookData.isbn) document.getElementById('isbn').value = bookData.isbn;
+    if (bookData.publisher) document.getElementById('publisher').value = bookData.publisher;
+    if (bookData.category) document.getElementById('category').value = bookData.category;
+    
+    // Scroll to top to show the filled fields
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Show success message
+    const flashContainer = document.createElement('div');
+    flashContainer.className = 'mb-4 p-4 rounded-lg flex items-start gap-3 bg-green-100 text-green-700 border-l-4 border-green-500';
+    flashContainer.innerHTML = `
+        <i class="fas fa-check-circle text-xl"></i>
+        <div>Book details filled from existing record!</div>
+    `;
+    document.querySelector('.upload-container').insertBefore(flashContainer, document.querySelector('.upload-card'));
+    
+    setTimeout(() => {
+        flashContainer.remove();
+    }, 5000);
+}
+
+// Function to dismiss lookup result
+function dismissLookup() {
+    document.getElementById('lookup-result-container').classList.add('hidden');
+    document.getElementById('lookup-result-container').innerHTML = '';
+}
+
+// Function to attach scanner detection to a specific field
+function attachScannerToField(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    
+    field.addEventListener('focus', function() {
+        activeScannerField = this;
+    });
+    
+    field.addEventListener('blur', function() {
+        if (activeScannerField === this) {
+            activeScannerField = null;
+        }
+    });
+    
+    field.addEventListener('keydown', function(e) {
+        // Update scanner status
+        const copyNum = this.dataset.copy;
+        const statusEl = document.getElementById(`scanner-status-${copyNum}`);
+        if (statusEl) {
+            statusEl.classList.add('scanning');
+            statusEl.querySelector('span').textContent = 'Scanning...';
+        }
+        
+        // Clear previous timer
+        if (scanTimer) clearTimeout(scanTimer);
+        
+        // Handle Enter key (end of scan)
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent form submission
+            
+            if (scanBuffer.length >= 3) {
+                processScannedBarcode(scanBuffer, this);
+            }
+            scanBuffer = '';
+            
+            // Reset scanner status
+            if (statusEl) {
+                statusEl.classList.remove('scanning');
+                statusEl.classList.add('active');
+                statusEl.querySelector('span').textContent = 'Scanner ready';
+            }
+            return;
+        }
+        
+        // Accumulate characters (ignore if not in barcode field)
+        if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            scanBuffer += e.key;
+        }
+        
+        // Set timeout to detect end of scan
+        scanTimer = setTimeout(() => {
+            if (scanBuffer.length >= 3) {
+                processScannedBarcode(scanBuffer, this);
+            }
+            scanBuffer = '';
+            
+            // Reset scanner status
+            if (statusEl) {
+                statusEl.classList.remove('scanning');
+                statusEl.classList.remove('active');
+                statusEl.querySelector('span').textContent = 'Scanner ready';
+            }
+        }, 100);
+    });
+}
+
+// Function to process scanned barcode
+function processScannedBarcode(barcode, field) {
+    field.value = barcode;
+    
+    // Visual feedback
+    field.classList.add('border-green-500', 'bg-green-50');
+    
+    // Show success message
+    const copyNum = field.dataset.copy;
+    const statusEl = document.getElementById(`barcode-status-${copyNum}`);
+    if (statusEl) {
+        statusEl.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle"></i> Barcode scanned</span>';
+    }
+    
+    // Show barcode preview
+    const previewEl = document.getElementById(`barcode-preview-${copyNum}`);
+    if (previewEl) {
+        previewEl.textContent = barcode;
+        previewEl.classList.remove('hidden');
+    }
+    
+    // Look up the barcode
+    lookupBarcode(barcode, copyNum);
+    
+    // Remove highlight after 3 seconds
+    setTimeout(() => {
+        field.classList.remove('border-green-500', 'bg-green-50');
+    }, 3000);
+    
+    console.log(`Barcode scanned for copy ${copyNum}:`, barcode);
+}
+
+// Function to highlight error field
+function highlightErrorField(fieldName, errorMessage) {
+    // Find the input field
+    let field = document.querySelector(`[name="${fieldName}"]`);
+    
+    // If not found, try common variations
+    if (!field) {
+        field = document.querySelector(`[name="${fieldName}_1"]`); // For copy fields
+    }
+    if (!field) {
+        field = document.getElementById(fieldName);
+    }
+    
+    if (field) {
+        // Add error styling
+        field.classList.add('border-red-500', 'bg-red-50');
+        
+        // Create error message element if it doesn't exist
+        if (!field.parentNode.querySelector('.error-message')) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${errorMessage}</span>
+            `;
+            field.parentNode.appendChild(errorDiv);
+        }
+        
+        // Scroll to the field
+        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Add a pulsing effect to draw attention
+        field.style.transition = 'all 0.3s ease';
+        field.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.3)';
+        setTimeout(() => {
+            field.style.boxShadow = '';
+        }, 2000);
+    }
+}
+
+// Function to show field warning
+function showFieldWarning(field, message) {
+    clearFieldWarning(field);
+    
+    field.classList.add('border-yellow-500', 'bg-yellow-50');
+    
+    const warningDiv = document.createElement('div');
+    warningDiv.className = 'warning-message';
+    warningDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>${message}</span>
+    `;
+    
+    field.parentNode.appendChild(warningDiv);
+}
+
+// Function to clear field warning
+function clearFieldWarning(field) {
+    field.classList.remove('border-yellow-500', 'bg-yellow-50');
+    const warning = field.parentNode.querySelector('.warning-message');
+    if (warning) warning.remove();
+}
+
+// ==================== INITIALIZATION CODE ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Format checkboxes - Handle has_digital and has_physical
+    const hasDigital = document.getElementById('has-digital');
+    const hasPhysical = document.getElementById('has-physical');
+    const physicalDetails = document.getElementById('physical-details');
+    
+    if (hasPhysical) {
+        hasPhysical.addEventListener('change', function() {
+            physicalDetails.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    
+    // Special request notes toggle
+    const requiresSpecial = document.getElementById('requires-special');
+    const specialNotes = document.getElementById('special-request-notes');
+    
+    if (requiresSpecial) {
+        requiresSpecial.addEventListener('change', function() {
+            specialNotes.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    
+    // Total copies change handler
+    const totalCopies = document.getElementById('total-copies');
+    if (totalCopies) {
+        totalCopies.addEventListener('change', function() {
+            const newCount = parseInt(this.value) || 1;
+            if (newCount < 1) this.value = 1;
+            if (newCount > 100) this.value = 100;
+            
+            // Adjust copies
+            while (copyCount < newCount) {
+                addCopy();
+            }
+            while (copyCount > newCount && copyCount > 1) {
+                removeCopy(copyCount);
+            }
+        });
+    }
+    
+    // PDF File Upload
+    const fileInput = document.getElementById('file-input');
+    const fileName = document.getElementById('file-name');
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileName.textContent = `📄 Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                fileName.classList.remove('hidden');
+                
+                // Check file size (100MB limit)
+                if (file.size > 100 * 1024 * 1024) {
+                    fileName.innerHTML = '<span class="text-red-500 font-semibold">❌ File too large! Maximum 100MB</span>';
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Cover Image Upload
+    const coverFileInput = document.getElementById('cover-file-input');
+    const coverFileName = document.getElementById('cover-file-name');
+    const imagePreview = document.getElementById('image-preview');
+    
+    if (coverFileInput) {
+        coverFileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    coverFileName.innerHTML = '<span class="text-red-500 font-semibold">❌ Invalid file type! Please upload an image (PNG, JPG, GIF, WEBP)</span>';
+                    coverFileName.classList.remove('hidden');
+                    this.value = '';
+                    imagePreview.innerHTML = '';
+                    return;
+                }
+                
+                coverFileName.textContent = `🖼️ Selected: ${file.name}`;
+                coverFileName.classList.remove('hidden');
+                
+                // Check file size (5MB limit)
+                if (file.size > 5 * 1024 * 1024) {
+                    coverFileName.innerHTML = '<span class="text-red-500 font-semibold">❌ File too large! Maximum 5MB</span>';
+                    this.value = '';
+                    imagePreview.innerHTML = '';
+                    return;
+                }
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.innerHTML = `
+                        <div class="text-center">
+                            <img src="${e.target.result}" class="preview-image">
+                            <p class="text-xs text-green-700 mt-2">✓ Cover image ready</p>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Sample File Upload
+    const sampleFileInput = document.getElementById('sample-file-input');
+    const sampleFileName = document.getElementById('sample-file-name');
+    
+    if (sampleFileInput) {
+        sampleFileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                sampleFileName.textContent = `📄 Sample selected: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+                sampleFileName.classList.remove('hidden');
+                
+                // Check file size (2MB limit)
+                if (file.size > 2 * 1024 * 1024) {
+                    sampleFileName.innerHTML = '<span class="text-red-500 font-semibold">❌ File too large! Maximum 2MB</span>';
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Drag and drop functionality
+    const uploadAreas = document.querySelectorAll('.file-upload-area');
+    
+    uploadAreas.forEach(area => {
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.background = 'rgba(26, 60, 26, 0.15)';
+            this.style.borderColor = '#2d5a2d';
+        });
+        
+        area.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.background = 'rgba(26, 60, 26, 0.05)';
+            this.style.borderColor = '#1a3c1a';
+        });
+        
+        area.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.background = 'rgba(26, 60, 26, 0.05)';
+            this.style.borderColor = '#1a3c1a';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                // Determine which input this drop is for
+                if (this === document.querySelector('.file-upload-area:first-of-type')) {
+                    if (coverFileInput) {
+                        coverFileInput.files = files;
+                        coverFileInput.dispatchEvent(new Event('change'));
+                    }
+                } else if (this.id === 'pdf-upload-area') {
+                    if (fileInput) {
+                        fileInput.files = files;
+                        fileInput.dispatchEvent(new Event('change'));
+                    }
+                } else {
+                    if (sampleFileInput) {
+                        sampleFileInput.files = files;
+                        sampleFileInput.dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+        });
+    });
+    
+    // Quick scan input handler
+    const quickScan = document.getElementById('quick-scan-input');
+    if (quickScan) {
+        quickScan.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const barcode = this.value.trim();
+                if (barcode) {
+                    lookupBarcode(barcode);
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Attach barcode scanner to all existing barcode fields
+    document.querySelectorAll('.barcode-field').forEach(field => {
+        attachScannerToField(field.id);
+    });
+    
+    // Attach generate barcode buttons
+    document.querySelectorAll('.generate-barcode-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const copyNum = this.dataset.copy;
+            generateBarcode(copyNum);
+        });
+    });
+    
+    // Attach lookup barcode buttons
+    document.querySelectorAll('.lookup-barcode-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const copyNum = this.dataset.copy;
+            const barcodeField = document.getElementById(`barcode_${copyNum}`);
+            if (barcodeField && barcodeField.value) {
+                lookupBarcode(barcodeField.value, copyNum);
+            } else {
+                alert('Please enter or scan a barcode first');
+            }
+        });
+    });
+    
+    // Initialize copies from server-side data
+    {% if form_data and form_data.total_copies and form_data.total_copies|int > 1 %}
+    var initialCopies = {{ form_data.total_copies|int }};
+    for (var i = 2; i <= initialCopies; i++) {
+        addCopy();
+        
+        // Set values for this copy if they exist in form_data
+        {% if form_data %}
+        var barcodeValue = "{{ form_data.get('barcode_' + i|string, '') }}";
+        var suffixValue = "{{ form_data.get('suffix_' + i|string, 'c.' + i|string) }}";
+        var shelfValue = "{{ form_data.get('shelf_location_' + i|string, '') }}";
+        var floorValue = "{{ form_data.get('floor_' + i|string, '') }}";
+        var sectionValue = "{{ form_data.get('section_' + i|string, '') }}";
+        var conditionValue = "{{ form_data.get('condition_' + i|string, 'new') }}";
+        var accessionValue = "{{ form_data.get('accession_number_' + i|string, '') }}";
+        
+        setTimeout(function(copyNum) {
+            if (barcodeValue) document.getElementById(`barcode_${copyNum}`).value = barcodeValue;
+            if (suffixValue) document.querySelector(`[name="suffix_${copyNum}"]`).value = suffixValue;
+            if (shelfValue) document.querySelector(`[name="shelf_location_${copyNum}"]`).value = shelfValue;
+            if (floorValue) document.querySelector(`[name="floor_${copyNum}"]`).value = floorValue;
+            if (sectionValue) document.querySelector(`[name="section_${copyNum}"]`).value = sectionValue;
+            if (conditionValue) document.querySelector(`[name="condition_${copyNum}"]`).value = conditionValue;
+            if (accessionValue) document.querySelector(`[name="accession_number_${copyNum}"]`).value = accessionValue;
+        }, 100, i);
+        {% endif %}
+    }
+    {% endif %}
+    
+    // Handle field-specific error highlighting
+    {% if error_field and error_field != 'unknown' %}
+    var errorField = "{{ error_field|replace('"', '\\"')|replace('\n', '\\n')|safe }}";
+    var errorMessage = "{{ error_message|replace('"', '\\"')|replace('\n', '\\n')|safe }}";
+    setTimeout(function() {
+        highlightErrorField(errorField, errorMessage);
+    }, 100);
+    {% endif %}
+});
+
+// ==================== GLOBAL EVENT LISTENERS ====================
+
+// Clear error styling on form submission
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    document.querySelectorAll('.border-red-500').forEach(el => {
+        el.classList.remove('border-red-500', 'bg-red-50');
+    });
+    document.querySelectorAll('.error-message').forEach(el => {
+        el.remove();
+    });
+});
+
+// Real-time validation for common unique fields
+document.addEventListener('DOMContentLoaded', function() {
+    const uniqueFields = ['isbn', 'issn', 'doi', 'oclc_number', 'lccn', 'google_books_id', 'open_library_id', 'worldcat_id'];
+    
+    uniqueFields.forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field) {
+            field.addEventListener('blur', async function() {
+                const value = this.value.trim();
+                if (value) {
+                    try {
+                        const response = await fetch(`/api/check-unique/${fieldName}?value=${encodeURIComponent(value)}`);
+                        const data = await response.json();
+                        
+                        if (!data.available) {
+                            showFieldWarning(this, data.message || `This ${fieldName} is already in use.`);
+                        } else {
+                            clearFieldWarning(this);
+                        }
+                    } catch (error) {
+                        console.error('Error checking uniqueness:', error);
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

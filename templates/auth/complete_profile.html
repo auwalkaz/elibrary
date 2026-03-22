@@ -1,0 +1,468 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .profile-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1a3c1a;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: '*';
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66,153,225,0.2);
+    }
+    
+    .photo-upload-area {
+        border: 2px dashed #4299e1;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f7fafc;
+        margin-bottom: 1rem;
+    }
+    
+    .photo-upload-area:hover {
+        background: #ebf8ff;
+        border-color: #2b6cb0;
+    }
+    
+    .photo-upload-area i {
+        font-size: 3rem;
+        color: #4299e1;
+        margin-bottom: 1rem;
+    }
+    
+    .photo-preview-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .photo-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid #4299e1;
+        display: none;
+    }
+    
+    .info-box {
+        background: linear-gradient(135deg, #1a3c1a, #2d5a2d);
+        color: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .info-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: rgba(255,255,255,0.1);
+        transform: rotate(45deg);
+    }
+    
+    .info-box-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .info-box-title {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-box-message {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    
+    .progress-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .progress-step::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e2e8f0;
+        z-index: 0;
+    }
+    
+    .progress-step:first-child::before {
+        left: 50%;
+    }
+    
+    .progress-step:last-child::before {
+        right: 50%;
+    }
+    
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        position: relative;
+        z-index: 1;
+        font-weight: 600;
+        color: #718096;
+    }
+    
+    .step-circle.completed {
+        background: #1a3c1a;
+        border-color: #1a3c1a;
+        color: white;
+    }
+    
+    .step-circle.active {
+        border-color: #4299e1;
+        color: #4299e1;
+        font-weight: 700;
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
+        color: #718096;
+    }
+    
+    .step-label.active {
+        color: #4299e1;
+        font-weight: 500;
+    }
+    
+    .step-label.completed {
+        color: #1a3c1a;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #1a3c1a, #2d5a2d);
+        color: white;
+        padding: 0.875rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        width: 100%;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 1rem;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(26,60,26,0.3);
+    }
+    
+    .btn-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .skip-link {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    .skip-link a {
+        color: #718096;
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+    
+    .skip-link a:hover {
+        color: #4299e1;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .alert-info {
+        background: #ebf8ff;
+        border: 1px solid #4299e1;
+        color: #2c5282;
+    }
+    
+    .alert-warning {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+        <div class="progress-step">
+            <div class="step-circle completed">✓</div>
+            <div class="step-label completed">Approved</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle active">2</div>
+            <div class="step-label active">Complete Profile</div>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <div class="step-label">Get Library Card</div>
+        </div>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="info-box">
+        <div class="info-box-content">
+            <div class="info-box-title">🎉 Congratulations {{ user.full_name or user.username }}!</div>
+            <div class="info-box-message">Your account has been approved</div>
+            <p style="margin-top: 1rem; opacity: 0.9;">Complete your profile below to activate your library card</p>
+        </div>
+    </div>
+    
+    <div class="profile-card">
+        <h2 class="section-title">Complete Your Profile</h2>
+        
+        <form method="POST" enctype="multipart/form-data" id="profileForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Profile Photo -->
+            <div class="form-group">
+                <label class="form-label required">Profile Photo</label>
+                <div class="photo-upload-area" onclick="document.getElementById('profile-photo').click()">
+                    <i class="fas fa-camera"></i>
+                    <p class="text-gray-700 font-medium">Click to upload your photo</p>
+                    <p class="text-xs text-gray-500">JPG, PNG or GIF (Max 2MB)</p>
+                </div>
+                <input type="file" id="profile-photo" name="profile_picture" accept="image/*" class="hidden" required>
+                <div class="photo-preview-container">
+                    <img id="photo-preview" class="photo-preview" src="#" alt="Profile Preview">
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    This photo will appear on your library card
+                </p>
+            </div>
+            
+            <!-- Address -->
+            <div class="form-group">
+                <label class="form-label required">Address</label>
+                <input type="text" name="address" class="form-input" 
+                       placeholder="Enter your residential address" required>
+            </div>
+            
+            <!-- Rank and Unit (Military Personnel) -->
+            <div class="form-group">
+                <label class="form-label">Rank (Military Personnel)</label>
+                <select name="rank" class="form-input">
+                    <option value="">Select Rank (Optional)</option>
+                    <option value="Private">Private</option>
+                    <option value="Corporal">Corporal</option>
+                    <option value="Sergeant">Sergeant</option>
+                    <option value="Lieutenant">Lieutenant</option>
+                    <option value="Captain">Captain</option>
+                    <option value="Major">Major</option>
+                    <option value="Lieutenant Colonel">Lieutenant Colonel</option>
+                    <option value="Colonel">Colonel</option>
+                    <option value="Brigadier General">Brigadier General</option>
+                    <option value="Major General">Major General</option>
+                    <option value="Lieutenant General">Lieutenant General</option>
+                    <option value="General">General</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Unit/Formation</label>
+                <input type="text" name="unit" class="form-input" 
+                       placeholder="e.g., 1 Brigade, Army HQ (Optional)">
+            </div>
+            
+            <!-- Date of Birth -->
+            <div class="form-group">
+                <label class="form-label required">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-input" required>
+            </div>
+            
+            <!-- Terms and Conditions -->
+            <div class="form-group">
+                <label class="flex items-center">
+                    <input type="checkbox" name="terms" class="form-checkbox h-4 w-4 text-blue-600" required>
+                    <span class="ml-2 text-sm text-gray-600">
+                        I confirm that the information provided is accurate and complete
+                    </span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <i class="fas fa-id-card mr-2"></i> Complete Profile & Generate Library Card
+            </button>
+        </form>
+        
+        <div class="skip-link">
+            <a href="{{ url_for('auth.user_dashboard') }}">
+                <i class="fas fa-clock mr-1"></i> I'll complete this later
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('profile-photo');
+    const photoPreview = document.getElementById('photo-preview');
+    const form = document.getElementById('profileForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Photo preview
+    photoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file size (2MB max)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File size must be less than 2MB');
+                this.value = '';
+                return;
+            }
+            
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Please upload a valid image file (JPG, PNG, GIF, WEBP)');
+                this.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.src = e.target.result;
+                photoPreview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const photo = photoInput.files[0];
+        const address = document.querySelector('input[name="address"]').value;
+        const dob = document.querySelector('input[name="date_of_birth"]').value;
+        const terms = document.querySelector('input[name="terms"]').checked;
+        
+        if (!photo) {
+            e.preventDefault();
+            alert('Please upload a profile photo');
+            return;
+        }
+        
+        if (!address.trim()) {
+            e.preventDefault();
+            alert('Please enter your address');
+            return;
+        }
+        
+        if (!dob) {
+            e.preventDefault();
+            alert('Please select your date of birth');
+            return;
+        }
+        
+        // Validate age (must be at least 18)
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        if (age < 18) {
+            e.preventDefault();
+            alert('You must be at least 18 years old to register');
+            return;
+        }
+        
+        if (!terms) {
+            e.preventDefault();
+            alert('Please confirm that the information is accurate');
+            return;
+        }
+        
+        // Disable button on submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Borrow Book</h1>
+            
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold">{{ book.title }}</h2>
+                <p class="text-gray-600">by {{ book.author }}</p>
+            </div>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            You are about to borrow this book. Please ensure you have a valid library card.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-700 mb-2">Book Details:</h3>
+                <ul class="text-gray-600 space-y-1">
+                    <li><strong>Available copies:</strong> {{ book.available_copies }}</li>
+                    <li><strong>Category:</strong> {{ book.category }}</li>
+                    {% if book.shelf_location %}
+                    <li><strong>Shelf location:</strong> {{ book.shelf_location }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <form method="POST" action="{{ url_for('books.borrow', book_id=book.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Borrowing Period</label>
+                    <select name="borrow_days" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="7">7 days</option>
+                        <option value="14" selected>14 days (standard)</option>
+                        <option value="21">21 days</option>
+                        <option value="30">30 days</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="text-gray-600 hover:text-gray-900">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-hand-holding-heart mr-2"></i>Confirm Borrow
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

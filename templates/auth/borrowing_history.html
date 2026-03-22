@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Borrowing History - Nigerian Army e-Library{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Borrowing History</h1>
+    
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Borrow Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Return Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fine</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for borrow in borrowings %}
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ borrow.book.title }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ borrow.book.author }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ borrow.borrow_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ borrow.due_date.strftime('%Y-%m-%d') if borrow.due_date else 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ borrow.return_date.strftime('%Y-%m-%d') if borrow.return_date else 'Not returned' }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if borrow.status == 'borrowed' %}bg-yellow-100 text-yellow-800
+                                {% elif borrow.status == 'returned' %}bg-green-100 text-green-800
+                                {% elif borrow.status == 'overdue' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ borrow.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {% if borrow.fine_amount and borrow.fine_amount > 0 %}
+                            <span class="text-red-600 font-semibold">₦{{ "%.2f"|format(borrow.fine_amount) }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            <div class="py-8">
+                                <i class="fas fa-book-open text-4xl text-gray-300 mb-3 block"></i>
+                                <p>No borrowing history found.</p>
+                                <a href="{{ url_for('books.home') }}" class="mt-3 inline-block text-blue-600 hover:text-blue-800">
+                                    Browse books to borrow
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages is defined and total_pages > 1 %}
+    <div class="flex justify-center mt-8">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+            {% if page is defined and page > 1 %}
+            <a href="?page={{ page - 1 }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <i class="fas fa-chevron-left"></i>
+                Previous
+            </a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if page is defined and p == page %}
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                    {{ p }}
+                </span>
+                {% else %}
+                <a href="?page={{ p }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    {{ p }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page is defined and page < total_pages %}
+            <a href="?page={{ page + 1 }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                Next
+                <i class="fas fa-chevron-right ml-1"></i>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+    
+    <!-- Summary Section -->
+    {% if borrowings %}
+    <div class="mt-8 bg-gray-50 rounded-xl p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Borrowing Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-blue-600">{{ borrowings|length }}</p>
+                <p class="text-sm text-gray-600">Total Borrowings</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-green-600">
+                    {{ borrowings|selectattr('status', 'equalto', 'returned')|list|length }}
+                </p>
+                <p class="text-sm text-gray-600">Returned</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-yellow-600">
+                    {{ borrowings|selectattr('status', 'equalto', 'borrowed')|list|length }}
+                </p>
+                <p class="text-sm text-gray-600">Currently Borrowing</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

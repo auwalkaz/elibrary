@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .admin-register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+    }
+    
+    .admin-register-card {
+        background: white;
+        border-radius: 2rem;
+        padding: 3rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-register-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+        transform: rotate(45deg);
+        z-index: 0;
+    }
+    
+    .admin-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .admin-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+    }
+    
+    .admin-header p {
+        color: #718096;
+        font-size: 0.95rem;
+    }
+    
+    .security-badge {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        display: inline-block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-label.required::after {
+        content: '*';
+        color: #e53e3e;
+        margin-left: 0.25rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    
+    .input-icon {
+        position: relative;
+    }
+    
+    .input-icon i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #a0aec0;
+    }
+    
+    .input-icon .form-input {
+        padding-left: 2.75rem;
+    }
+    
+    .secret-key-input {
+        background: #f7fafc;
+        border-color: #667eea;
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+    
+    .requirements-list {
+        background: #f7fafc;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .requirements-list h4 {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    .requirements-list ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .requirements-list li {
+        color: #718096;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .requirements-list li i {
+        width: 20px;
+        color: #48bb78;
+        margin-right: 0.5rem;
+    }
+    
+    .requirements-list li i.fa-times-circle {
+        color: #f56565;
+    }
+    
+    .btn-register-admin {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .btn-register-admin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(102,126,234,0.4);
+    }
+    
+    .btn-register-admin:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .admin-footer {
+        text-align: center;
+        margin-top: 2rem;
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    .admin-footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .admin-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    .alert {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .alert-danger {
+        background: #fff5f5;
+        border: 1px solid #fc8181;
+        color: #c53030;
+    }
+    
+    .alert-success {
+        background: #f0fff4;
+        border: 1px solid #9ae6b4;
+        color: #276749;
+    }
+    
+    .alert-info {
+        background: #ebf8ff;
+        border: 1px solid #90cdf4;
+        color: #2c5282;
+    }
+    
+    .password-strength {
+        margin-top: 0.5rem;
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    
+    .strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s, background 0.3s;
+    }
+    
+    .strength-bar.weak { background: #f56565; }
+    .strength-bar.medium { background: #fbbf24; }
+    .strength-bar.strong { background: #48bb78; }
+    
+    .info-text {
+        font-size: 0.85rem;
+        color: #718096;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-register-container">
+    <div class="admin-register-card">
+        <div class="admin-header">
+            <span class="security-badge">
+                <i class="fas fa-shield-alt mr-2"></i>Top Secret Clearance Required
+            </span>
+            <h1>Admin Registration</h1>
+            <p>Secure administrator account creation</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="requirements-list">
+            <h4>⚠️ Security Requirements</h4>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Valid registration key required</li>
+                <li><i class="fas fa-check-circle"></i> Admin code verification</li>
+                <li><i class="fas fa-check-circle"></i> Strong password (min. 8 chars)</li>
+                <li><i class="fas fa-check-circle"></i> Official .gov.ng email recommended</li>
+                <li><i class="fas fa-check-circle"></i> Top secret clearance granted</li>
+            </ul>
+        </div>
+        
+        <form method="POST" id="adminRegisterForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Secret Registration Key -->
+            <div class="form-group">
+                <label class="form-label required">Secret Registration Key</label>
+                <div class="input-icon">
+                    <i class="fas fa-key"></i>
+                    <input type="password" name="secret_key" class="form-input secret-key-input" 
+                           placeholder="Enter secret registration key" required>
+                </div>
+                <div class="info-text">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Contact system administrator for this key
+                </div>
+            </div>
+            
+            <!-- Admin Code -->
+            <div class="form-group">
+                <label class="form-label required">Admin Code</label>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="admin_code" class="form-input secret-key-input" 
+                           placeholder="Enter admin code" required>
+                </div>
+            </div>
+            
+            <hr style="margin: 2rem 0; border: 1px solid #e2e8f0;">
+            
+            <!-- Full Name -->
+            <div class="form-group">
+                <label class="form-label required">Full Name</label>
+                <div class="input-icon">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="full_name" class="form-input" 
+                           placeholder="Enter your full name" required>
+                </div>
+            </div>
+            
+            <!-- Username -->
+            <div class="form-group">
+                <label class="form-label required">Username</label>
+                <div class="input-icon">
+                    <i class="fas fa-at"></i>
+                    <input type="text" name="username" class="form-input" 
+                           placeholder="Choose username" required>
+                </div>
+            </div>
+            
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label required">Email Address</label>
+                <div class="input-icon">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" class="form-input" 
+                           placeholder="admin@domain.gov.ng" required>
+                </div>
+                <div class="info-text">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Official .gov.ng email recommended
+                </div>
+            </div>
+            
+            <!-- Phone Number -->
+            <div class="form-group">
+                <label class="form-label required">Phone Number</label>
+                <div class="input-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" name="phone_number" class="form-input" 
+                           placeholder="+234 XXX XXX XXXX" required>
+                </div>
+            </div>
+            
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label required">Password</label>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" id="password" class="form-input" 
+                           placeholder="Min. 8 characters" required>
+                </div>
+                <div class="password-strength">
+                    <div id="strength-bar" class="strength-bar"></div>
+                </div>
+                <div class="info-text" id="strength-text">Enter password</div>
+            </div>
+            
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label required">Confirm Password</label>
+                <div class="input-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="confirm_password" id="confirm-password" class="form-input" 
+                           placeholder="Re-enter password" required>
+                </div>
+                <div class="info-text" id="match-text"></div>
+            </div>
+            
+            <!-- Terms -->
+            <div class="form-group">
+                <label class="flex items-center">
+                    <input type="checkbox" name="terms" class="form-checkbox h-4 w-4 text-indigo-600" required>
+                    <span class="ml-2 text-sm text-gray-600">
+                        I confirm that I am authorized to create an administrator account
+                    </span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-register-admin" id="submitBtn">
+                <i class="fas fa-user-shield mr-2"></i> Create Admin Account
+            </button>
+        </form>
+        
+        <div class="admin-footer">
+            <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+            <p class="mt-2 text-xs">All admin activities are logged and monitored</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm-password');
+    const strengthBar = document.getElementById('strength-bar');
+    const strengthText = document.getElementById('strength-text');
+    const matchText = document.getElementById('match-text');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('adminRegisterForm');
+    
+    // Password strength meter
+    password.addEventListener('input', function() {
+        const val = this.value;
+        let strength = 0;
+        
+        // Length check
+        if (val.length >= 8) strength += 25;
+        if (val.length >= 12) strength += 10;
+        
+        // Character variety
+        if (val.match(/[a-z]/)) strength += 15;
+        if (val.match(/[A-Z]/)) strength += 15;
+        if (val.match(/[0-9]/)) strength += 15;
+        if (val.match(/[^a-zA-Z0-9]/)) strength += 20;
+        
+        strength = Math.min(strength, 100);
+        
+        strengthBar.style.width = strength + '%';
+        
+        // Update strength class and text
+        strengthBar.className = 'strength-bar';
+        if (strength < 40) {
+            strengthBar.classList.add('weak');
+            strengthText.textContent = 'Weak password';
+        } else if (strength < 70) {
+            strengthBar.classList.add('medium');
+            strengthText.textContent = 'Medium password';
+        } else {
+            strengthBar.classList.add('strong');
+            strengthText.textContent = 'Strong password';
+        }
+        
+        checkPasswordMatch();
+    });
+    
+    // Password match checker
+    function checkPasswordMatch() {
+        if (confirmPassword.value) {
+            if (password.value === confirmPassword.value) {
+                matchText.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Passwords match';
+                matchText.style.color = '#48bb78';
+            } else {
+                matchText.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i> Passwords do not match';
+                matchText.style.color = '#f56565';
+            }
+        } else {
+            matchText.innerHTML = '';
+        }
+    }
+    
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const secretKey = document.querySelector('input[name="secret_key"]').value;
+        const adminCode = document.querySelector('input[name="admin_code"]').value;
+        const username = document.querySelector('input[name="username"]').value;
+        const email = document.querySelector('input[name="email"]').value;
+        const phone = document.querySelector('input[name="phone_number"]').value;
+        const passwordVal = password.value;
+        const confirmVal = confirmPassword.value;
+        const terms = document.querySelector('input[name="terms"]').checked;
+        
+        let errors = [];
+        
+        if (!secretKey) errors.push('Secret registration key is required');
+        if (!adminCode) errors.push('Admin code is required');
+        if (!username) errors.push('Username is required');
+        if (username.length < 3) errors.push('Username must be at least 3 characters');
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            errors.push('Please enter a valid email address');
+        }
+        
+        // Phone validation (Nigerian format)
+        const phoneRegex = /^(\+?234|0)[7-9][0-1][0-9]{8}$/;
+        if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+            errors.push('Please enter a valid Nigerian phone number');
+        }
+        
+        if (passwordVal.length < 8) {
+            errors.push('Password must be at least 8 characters long');
+        }
+        
+        if (passwordVal !== confirmVal) {
+            errors.push('Passwords do not match');
+        }
+        
+        if (!terms) {
+            errors.push('You must confirm authorization');
+        }
+        
+        if (errors.length > 0) {
+            e.preventDefault();
+            alert('Please fix the following errors:\n\n• ' + errors.join('\n• '));
+            return;
+        }
+        
+        // Disable button on submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating Account...';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Library Card</h1>
+        
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-xl p-8 text-white">
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold">Nigerian Army E-Library</h2>
+                    <p class="text-blue-100">Patron Library Card</p>
+                </div>
+                {% if card.barcode_image %}
+                <img src="{{ card.barcode_image }}" alt="Barcode" class="h-16">
+                {% endif %}
+            </div>
+            
+            <div class="grid grid-cols-2 gap-6 mb-8">
+                <div>
+                    <p class="text-blue-200 text-sm">Card Number</p>
+                    <p class="text-xl font-mono">{{ card.card_number }}</p>
+                </div>
+                <div>
+                    <p class="text-blue-200 text-sm">Patron Name</p>
+                    <p class="text-xl">{{ user.full_name or user.username }}</p>
+                </div>
+                <div>
+                    <p class="text-blue-200 text-sm">Issue Date</p>
+                    <p class="text-lg">{{ card.issued_date.strftime('%Y-%m-%d') }}</p>
+                </div>
+                <div>
+                    <p class="text-blue-200 text-sm">Expiry Date</p>
+                    <p class="text-lg {% if card.is_expired %}text-red-300{% endif %}">{{ card.expiry_date.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+            
+            <div class="border-t border-blue-400 pt-4 flex justify-between items-center">
+                <div>
+                    <p class="text-blue-200 text-sm">Status</p>
+                    <span class="px-3 py-1 rounded-full text-sm {% if card.is_active %}bg-green-500{% else %}bg-red-500{% endif %}">
+                        {{ 'Active' if card.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                {% if card.is_expired %}
+                <span class="text-red-300 font-semibold">EXPIRED</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mt-6 flex justify-end space-x-3">
+            <a href="{{ url_for('admin.manage_patrons') }}" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

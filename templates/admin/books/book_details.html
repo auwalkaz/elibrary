@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ book.title }} - Nigerian Army e-Library{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="md:flex">
+            <!-- Book Cover -->
+            <div class="md:w-1/3 p-6">
+                {% if book.cover_image %}
+                <img src="{{ url_for('admin.uploaded_file', filename=book.cover_image) }}" 
+                     alt="{{ book.title }}" 
+                     class="w-full rounded-lg shadow-md">
+                {% else %}
+                <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span class="text-gray-500">No Cover</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Book Details -->
+            <div class="md:w-2/3 p-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ book.title }}</h1>
+                <p class="text-xl text-gray-600 mb-4">by {{ book.author }}</p>
+                
+                {% if book.category %}
+                <p class="text-sm text-gray-500 mb-2">Category: {{ book.category }}</p>
+                {% endif %}
+                
+                {% if book.publisher %}
+                <p class="text-sm text-gray-500 mb-2">Publisher: {{ book.publisher }}</p>
+                {% endif %}
+                
+                {% if book.published_year %}
+                <p class="text-sm text-gray-500 mb-4">Published: {{ book.published_year }}</p>
+                {% endif %}
+                
+                <div class="prose max-w-none mb-6">
+                    <h3 class="text-lg font-semibold">Description</h3>
+                    <p>{{ book.description or 'No description available.' }}</p>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex space-x-4">
+                    {% if book.has_digital %}
+                    <a href="{{ url_for('books.read', book_id=book.id) }}" 
+                       class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        Read Online
+                    </a>
+                    
+                    <a href="{{ url_for('books.download', filename=book.filename) }}" 
+                       class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                        Download
+                    </a>
+                    {% endif %}
+                    
+                    {% if session.user_id %}
+                    <button onclick="toggleWishlist({{ book.id }})" 
+                            class="{% if in_wishlist %}bg-red-600 hover:bg-red-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white px-6 py-2 rounded-lg">
+                        {% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reviews Section -->
+        {% if reviews %}
+        <div class="border-t border-gray-200 p-6">
+            <h2 class="text-2xl font-bold mb-4">Reviews</h2>
+            {% for review in reviews %}
+            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <span class="font-semibold">{{ review.user.username }}</span>
+                    <span class="text-yellow-400 ml-2">
+                        {% for i in range(review.rating) %}★{% endfor %}
+                        {% for i in range(5 - review.rating) %}☆{% endfor %}
+                    </span>
+                    <span class="text-gray-500 text-sm ml-2">{{ review.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <p>{{ review.comment }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleWishlist(bookId) {
+    fetch(`/api/wishlist/toggle/${bookId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

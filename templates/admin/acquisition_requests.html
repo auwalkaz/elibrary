@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-tab {
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        border: 2px solid #e5e7eb;
+        cursor: pointer;
+        text-decoration: none;
+        color: #4b5563;
+        transition: all 0.2s;
+    }
+    
+    .filter-tab:hover {
+        border-color: #ffd700;
+    }
+    
+    .filter-tab.active {
+        background: #1a3c1a;
+        color: white;
+        border-color: #1a3c1a;
+    }
+    
+    .request-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .request-card.pending { border-left-color: #f59e0b; }
+    .request-card.approved { border-left-color: #10b981; }
+    .request-card.ordered { border-left-color: #3b82f6; }
+    .request-card.received { border-left-color: #8b5cf6; }
+    .request-card.rejected { border-left-color: #ef4444; }
+    
+    .priority-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .priority-high { background: #fee2e2; color: #991b1b; }
+    .priority-medium { background: #fef3c7; color: #92400e; }
+    .priority-low { background: #dbeafe; color: #1e40af; }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        text-align: center;
+        border: 2px solid #e5e7eb;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a3c1a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-white">📋 Acquisition Requests</h1>
+        <a href="{{ url_for('admin.new_acquisition_request') }}" 
+           class="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 transition flex items-center gap-2">
+            <i class="fas fa-plus"></i> New Request
+        </a>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ counts.pending }}</div>
+            <div class="text-gray-600">Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ counts.approved }}</div>
+            <div class="text-gray-600">Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ counts.ordered }}</div>
+            <div class="text-gray-600">Ordered</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ counts.received }}</div>
+            <div class="text-gray-600">Received</div>
+        </div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="{{ url_for('admin.acquisition_requests', status='all') }}" 
+           class="filter-tab {% if current_status == 'all' %}active{% endif %}">All</a>
+        <a href="{{ url_for('admin.acquisition_requests', status='pending') }}" 
+           class="filter-tab {% if current_status == 'pending' %}active{% endif %}">Pending</a>
+        <a href="{{ url_for('admin.acquisition_requests', status='approved') }}" 
+           class="filter-tab {% if current_status == 'approved' %}active{% endif %}">Approved</a>
+        <a href="{{ url_for('admin.acquisition_requests', status='ordered') }}" 
+           class="filter-tab {% if current_status == 'ordered' %}active{% endif %}">Ordered</a>
+        <a href="{{ url_for('admin.acquisition_requests', status='received') }}" 
+           class="filter-tab {% if current_status == 'received' %}active{% endif %}">Received</a>
+    </div>
+    
+    <!-- Requests List -->
+    {% for request in requests %}
+    <div class="request-card {{ request.status }}" id="request-{{ request.id }}">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <h3 class="text-xl font-bold">{{ request.title }}</h3>
+                    <span class="priority-badge priority-{{ request.priority }}">
+                        {{ request.priority|upper }}
+                    </span>
+                    <span class="px-3 py-1 rounded-full text-sm
+                        {% if request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                        {% elif request.status == 'approved' %}bg-green-100 text-green-800
+                        {% elif request.status == 'ordered' %}bg-blue-100 text-blue-800
+                        {% elif request.status == 'received' %}bg-purple-100 text-purple-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ request.status|upper }}
+                    </span>
+                </div>
+                <p class="text-gray-600 mb-3">by {{ request.author }}</p>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">ISBN:</span>
+                        <span class="font-medium">{{ request.isbn or 'N/A' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Format:</span>
+                        <span class="font-medium">{{ request.format_type|title }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Est. Cost:</span>
+                        <span class="font-medium">₦{{ "%.2f"|format(request.estimated_cost or 0) }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Requested:</span>
+                        <span class="font-medium">{{ request.request_date.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                </div>
+                
+                {% if request.justification %}
+                <div class="mt-3 text-sm text-gray-600">
+                    <i class="fas fa-quote-left text-gray-400 mr-1"></i>
+                    {{ request.justification }}
+                </div>
+                {% endif %}
+                
+                {% if request.review_notes %}
+                <div class="mt-2 text-sm bg-gray-50 p-2 rounded">
+                    <span class="text-gray-500">Review notes:</span> {{ request.review_notes }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        {% if request.status == 'pending' %}
+        <div class="mt-4 flex gap-2">
+            <button onclick="reviewRequest({{ request.id }}, 'approve')" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class="fas fa-check mr-1"></i> Approve
+            </button>
+            <button onclick="showRejectModal({{ request.id }})" 
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                <i class="fas fa-times mr-1"></i> Reject
+            </button>
+            <button onclick="editRequest({{ request.id }})" 
+                    class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </button>
+        </div>
+        {% elif request.status == 'approved' %}
+        <div class="mt-4">
+            <button onclick="createPurchaseOrder({{ request.id }})" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <i class="fas fa-file-invoice mr-1"></i> Create Purchase Order
+            </button>
+        </div>
+        {% elif request.status == 'ordered' %}
+        <div class="mt-4">
+            <button onclick="markAsReceived({{ request.id }})" 
+                    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                <i class="fas fa-check-double mr-1"></i> Mark as Received
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="flex justify-center mt-8 gap-2">
+        {% for p in range(1, total_pages + 1) %}
+        <a href="{{ url_for('admin.acquisition_requests', status=current_status, page=p) }}" 
+           class="px-4 py-2 border rounded-lg {% if p == page %}bg-green-700 text-white{% else %}bg-white{% endif %}">
+            {{ p }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg max-w-md w-full">
+        <h3 class="text-xl font-bold mb-4">Reject Acquisition Request</h3>
+        <textarea id="rejectReason" rows="4" class="w-full border rounded-lg p-3 mb-4" 
+                  placeholder="Please provide a reason for rejection..."></textarea>
+        <div class="flex justify-end gap-2">
+            <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
+            <button onclick="submitRejection()" class="px-4 py-2 bg-red-600 text-white rounded-lg">Reject</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRequestId = null;
+
+function reviewRequest(requestId, action) {
+    if (action === 'reject') {
+        showRejectModal(requestId);
+        return;
+    }
+    
+    fetch(`/admin/acquisition/${requestId}/review`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: action})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert(data.message);
+    });
+}
+
+function showRejectModal(requestId) {
+    currentRequestId = requestId;
+    document.getElementById('rejectModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+    currentRequestId = null;
+}
+
+function submitRejection() {
+    const reason = document.getElementById('rejectReason').value;
+    if (!reason) {
+        alert('Please provide a reason for rejection');
+        return;
+    }
+    
+    fetch(`/admin/acquisition/${currentRequestId}/review`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'reject', notes: reason})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else alert(data.message);
+    });
+}
+
+function createPurchaseOrder(requestId) {
+    window.location.href = `/admin/purchase-order/new?request_id=${requestId}`;
+}
+
+function markAsReceived(requestId) {
+    if (confirm('Mark this item as received?')) {
+        fetch(`/admin/acquisition/${requestId}/receive`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.message);
+        });
+    }
+}
+</script>
+{% endblock %}

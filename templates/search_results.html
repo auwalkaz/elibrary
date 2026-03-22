@@ -1,0 +1,1130 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .search-header {
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #ffd700;
+    }
+    
+    .search-header h1 {
+        color: white !important;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .result-count {
+        color: #ffd700;
+        font-weight: 700;
+        font-size: 1.3rem;
+        background: rgba(0,0,0,0.3);
+        padding: 0.3rem 1rem;
+        border-radius: 2rem;
+        display: inline-block;
+    }
+    
+    .filter-badge {
+        background: rgba(255, 215, 0, 0.25);
+        border: 2px solid #ffd700;
+        color: white;
+        padding: 0.5rem 1.2rem;
+        border-radius: 2rem;
+        font-size: 1rem;
+        font-weight: 500;
+        backdrop-filter: blur(5px);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .clear-filter {
+        color: #ffd700;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        background: rgba(0,0,0,0.3);
+        padding: 0.5rem 1.2rem;
+        border-radius: 2rem;
+        border: 1px solid #ffd700;
+        text-decoration: none;
+    }
+    
+    .clear-filter:hover {
+        color: #ffffff;
+        background: #ff4444;
+        border-color: #ff4444;
+    }
+    
+    .no-results {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 1.5rem;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 2px solid #ffd700;
+        margin: 2rem 0;
+    }
+    
+    .no-results i {
+        color: #ffd700;
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .no-results h3 {
+        color: white !important;
+        font-size: 2.2rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .no-results p {
+        color: rgba(255,255,255,0.95) !important;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Book Card Styles - Enhanced */
+    .book-card {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 2px solid #e5e7eb;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .book-card:hover {
+        transform: translateY(-5px);
+        border-color: #ffd700;
+        box-shadow: 0 10px 25px rgba(255, 215, 0, 0.2);
+    }
+    
+    .book-cover {
+        height: 200px;
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .book-cover i {
+        color: white;
+        font-size: 4rem;
+        opacity: 0.9;
+    }
+    
+    .book-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    /* Format Badges */
+    .format-badges {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 20;
+    }
+    
+    .format-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .format-badge.digital {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .format-badge.physical {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .format-badge.both {
+        background: #8b5cf6;
+        color: white;
+    }
+    
+    .format-badge i {
+        font-size: 0.7rem;
+        color: white !important;
+    }
+    
+    /* Security Classification Badge */
+    .security-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 15;
+    }
+    
+    .security-badge.restricted {
+        background: #fbbf24;
+        color: #0a1f3a;
+    }
+    
+    .security-badge.confidential {
+        background: #f97316;
+        color: white;
+    }
+    
+    .security-badge.secret {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .security-badge.top_secret {
+        background: #8b5cf6;
+        color: white;
+    }
+    
+    .security-badge i {
+        font-size: 0.7rem;
+    }
+    
+    .book-badge {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        background: rgba(255, 215, 0, 0.95);
+        padding: 0.4rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #0a1f3a;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+    
+    .book-badge i {
+        color: #0a1f3a !important;
+        font-size: 0.8rem;
+    }
+    
+    /* Reading Progress Badge */
+    .progress-badge {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 0.3rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #ffd700;
+        border: 1px solid #ffd700;
+        z-index: 10;
+    }
+    
+    .progress-badge i {
+        color: #ffd700 !important;
+        font-size: 0.75rem;
+    }
+    
+    /* Highlight Snippet */
+    .highlight-snippet {
+        background: #fef3c7;
+        border-left: 4px solid #ffd700;
+        padding: 0.75rem;
+        margin: 0.75rem 0;
+        font-size: 0.85rem;
+        color: #1f2937;
+        border-radius: 0 0.5rem 0.5rem 0;
+        font-style: italic;
+    }
+    
+    .highlight-snippet mark {
+        background: #ffd700;
+        color: #0a1f3a;
+        padding: 0.1rem 0.3rem;
+        border-radius: 0.25rem;
+        font-weight: 600;
+    }
+    
+    .book-content {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+    }
+    
+    .book-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+        color: #111827;
+    }
+    
+    .book-author {
+        font-size: 0.95rem;
+        color: #4b5563;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .book-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+        padding: 0.5rem 0;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+        flex-wrap: wrap;
+    }
+    
+    .book-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .book-meta i {
+        color: #ffd700;
+    }
+    
+    /* Availability Indicator */
+    .availability {
+        font-size: 0.8rem;
+        margin-bottom: 0.75rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .availability.digital {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .availability.physical {
+        background: #fed7aa;
+        color: #92400e;
+    }
+    
+    .availability.both {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+    
+    .availability.restricted {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .book-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+    
+    .read-link {
+        background: #0a1f3a;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 2px solid #ffd700;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .read-link:hover {
+        background: #ffd700;
+        color: #0a1f3a;
+        transform: translateY(-2px);
+    }
+    
+    /* Continue Reading Link */
+    .continue-link {
+        background: #059669;
+        border-color: #10b981;
+    }
+    
+    .continue-link:hover {
+        background: #10b981;
+        color: white;
+    }
+    
+    /* Request Access Link */
+    .request-link {
+        background: #d97706;
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 2px solid #fbbf24;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .request-link:hover {
+        background: #fbbf24;
+        color: #0a1f3a;
+        transform: translateY(-2px);
+    }
+    
+    .wishlist-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        transition: all 0.2s ease;
+        color: #ffd700;
+        margin-left: 0.5rem;
+    }
+    
+    .wishlist-btn:hover {
+        transform: scale(1.1);
+    }
+    
+    .wishlist-btn i.fas {
+        color: #ffd700;
+    }
+    
+    .wishlist-btn i.far {
+        color: #9ca3af;
+    }
+    
+    /* Search Form - Enhanced */
+    .search-form {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 2px solid #ffd700;
+    }
+    
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+    }
+    
+    .search-input {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid #ffd700;
+        border-radius: 0.75rem;
+        color: white;
+        padding: 0.75rem 1rem 0.75rem 2.8rem;
+        width: 100%;
+        font-size: 1rem;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #ffd700;
+        box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.3);
+        background: rgba(255, 255, 255, 0.25);
+    }
+    
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .search-select {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid #ffd700;
+        border-radius: 0.75rem;
+        color: white;
+        padding: 0.75rem 2rem 0.75rem 1rem;
+        font-size: 0.95rem;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1.2rem;
+    }
+    
+    .search-select option {
+        background: #0a1f3a;
+        color: white;
+        padding: 1rem;
+    }
+    
+    .search-btn {
+        background: #ffd700;
+        color: #0a1f3a;
+        border: none;
+        border-radius: 0.75rem;
+        padding: 0.75rem 2rem;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .search-btn:hover {
+        background: #fbbf24;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+    
+    /* Format Filter */
+    .format-filter {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .format-filter-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid #ffd700;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    .format-filter-btn:hover,
+    .format-filter-btn.active {
+        background: #ffd700;
+        color: #0a1f3a;
+    }
+    
+    /* Solr Indicator */
+    .solr-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.3rem 1rem;
+        border-radius: 2rem;
+        border: 1px solid #ffd700;
+        color: white;
+        font-size: 0.85rem;
+        margin-left: 1rem;
+    }
+    
+    .solr-indicator i {
+        color: #ffd700;
+    }
+    
+    .solr-indicator .active {
+        color: #10b981;
+    }
+    
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 3rem;
+        flex-wrap: wrap;
+    }
+    
+    .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.8rem;
+        height: 2.8rem;
+        border-radius: 0.75rem;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid #ffd700;
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .page-link:hover {
+        background: #ffd700;
+        color: #0a1f3a;
+        transform: translateY(-2px);
+    }
+    
+    .page-link.active {
+        background: #ffd700;
+        color: #0a1f3a;
+        border-width: 2px;
+    }
+    
+    .page-link.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        border-color: rgba(255,215,0,0.3);
+    }
+    
+    /* Active Filters */
+    .filters-container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+    
+    /* Notification */
+    .notification {
+        position: fixed;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: #059669;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 9999;
+        font-weight: 500;
+        border: 2px solid #ffd700;
+        animation: slideIn 0.3s ease;
+    }
+    
+    .notification.error {
+        background: #dc2626;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    /* Book Grid */
+    .books-grid {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    @media (min-width: 640px) {
+        .books-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .books-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (min-width: 1280px) {
+        .books-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    /* No cover fallback styles */
+    .no-cover-fallback {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+    }
+    
+    .no-cover-fallback i {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 4rem;
+    }
+    
+    .no-cover-fallback span {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    .quick-view {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: rgba(255, 215, 0, 0.9);
+        color: #0a1f3a;
+        padding: 0.3rem 0.8rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border: 1px solid white;
+        z-index: 30;
+    }
+    
+    .book-card:hover .quick-view {
+        opacity: 1;
+    }
+    
+    .quick-view i {
+        color: #0a1f3a !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Search Header -->
+<div class="search-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <h1 class="text-4xl font-bold text-white mb-3">🔍 Search Results</h1>
+            
+            <!-- Solr Search Indicator -->
+            {% if using_solr is defined and using_solr %}
+            <div class="solr-indicator">
+                <i class="fas fa-bolt active"></i>
+                <span>Powered by Solr</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Active Filters Display -->
+        <div class="filters-container">
+            {% if search_query %}
+            <span class="filter-badge">
+                <i class="fas fa-search"></i> "{{ search_query }}"
+            </span>
+            {% endif %}
+            
+            {% if selected_category %}
+            <span class="filter-badge">
+                <i class="fas fa-tag"></i> {{ selected_category }}
+            </span>
+            {% endif %}
+            
+            {% if selected_format %}
+            <span class="filter-badge">
+                <i class="fas fa-filter"></i> 
+                {% if selected_format == 'digital' %}Digital Only
+                {% elif selected_format == 'physical' %}Physical Only
+                {% elif selected_format == 'both' %}Both Formats
+                {% endif %}
+            </span>
+            {% endif %}
+            
+            <span class="filter-badge">
+                <i class="fas fa-sort"></i>
+                {% if selected_sort == 'newest' %}Newest First
+                {% elif selected_sort == 'oldest' %}Oldest First
+                {% elif selected_sort == 'title' %}Title A-Z
+                {% elif selected_sort == 'author' %}Author A-Z
+                {% elif selected_sort == 'rating' %}Highest Rated
+                {% elif selected_sort == 'popular' %}Most Popular
+                {% else %}Newest First
+                {% endif %}
+            </span>
+            
+            <a href="{{ url_for('books.home') }}" class="clear-filter">
+                <i class="fas fa-times mr-1"></i> Clear All
+            </a>
+        </div>
+        
+        <div class="mt-4">
+            <span class="result-count">
+                <i class="fas fa-book mr-2"></i>Found {{ total_results }} book{{ 's' if total_results != 1 else '' }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search Form -->
+    <div class="search-form">
+        <form method="GET" action="{{ url_for('books.home') }}" class="flex flex-col md:flex-row gap-4">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-400 text-lg"></i>
+                <input type="text" name="q" value="{{ search_query or '' }}" 
+                       placeholder="Search by title, author, category, or keyword..." 
+                       class="search-input"
+                       id="search-input">
+            </div>
+            
+            <select name="category" class="search-select min-w-[140px]">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+            
+            <!-- Format Filter -->
+            <select name="format" class="search-select min-w-[140px]">
+                <option value="">All Formats</option>
+                <option value="digital" {% if selected_format == 'digital' %}selected{% endif %}>📱 Digital Only</option>
+                <option value="physical" {% if selected_format == 'physical' %}selected{% endif %}>📚 Physical Only</option>
+                <option value="both" {% if selected_format == 'both' %}selected{% endif %}>🔄 Both Formats</option>
+            </select>
+            
+            <select name="sort" class="search-select min-w-[140px]">
+                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                <option value="title" {% if selected_sort == 'title' %}selected{% endif %}>Title A-Z</option>
+                <option value="author" {% if selected_sort == 'author' %}selected{% endif %}>Author A-Z</option>
+                <option value="rating" {% if selected_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+                <option value="popular" {% if selected_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+            </select>
+            
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </form>
+    </div>
+
+    <!-- Results Grid -->
+    {% if books %}
+    <div class="books-grid">
+        {% for book in books %}
+        <div class="book-card">
+            <!-- Quick View Link -->
+            <a href="{{ url_for('books.book_details', book_id=book.id) }}" class="quick-view">
+                <i class="fas fa-eye"></i> Quick View
+            </a>
+            
+            <div class="book-cover">
+                {% if book.cover_image %}
+                    <!-- FIXED: Clean image display with error fallback -->
+                    <img src="{{ url_for('admin.uploaded_file', filename='covers/' + book.cover_image) }}"  
+                         alt="{{ book.title }}"
+                         style="width: 100%; height: 100%; display: block; object-fit: cover;"
+                         onerror="this.style.display='none'; this.parentElement.querySelector('.no-cover-fallback').classList.remove('hidden');">
+                    <div class="no-cover-fallback hidden">
+                        <i class="fas fa-book"></i>
+                        <span>{{ book.category or 'Book' }}</span>
+                    </div>
+                {% else %}
+                    <div class="no-cover-fallback">
+                        <i class="fas fa-book"></i>
+                        <span>{{ book.category or 'Book' }}</span>
+                    </div>
+                {% endif %}
+
+                <!-- Format Badges -->
+                <div class="format-badges">
+                    {% if book.has_digital and book.has_physical %}
+                        <span class="format-badge both">
+                            <i class="fas fa-sync-alt"></i> Both Formats
+                        </span>
+                    {% else %}
+                        {% if book.has_digital %}
+                        <span class="format-badge digital">
+                            <i class="fas fa-mobile-alt"></i> Digital
+                        </span>
+                        {% endif %}
+                        {% if book.has_physical %}
+                        <span class="format-badge physical">
+                            <i class="fas fa-book"></i> Physical
+                        </span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <!-- Security Classification Badge -->
+                {% if book.security_classification %}
+                <div class="security-badge {{ book.security_classification|lower|replace(' ', '_') }}">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>{{ book.security_classification }}</span>
+                </div>
+                {% endif %}
+                
+                <!-- Book Badge -->
+                <div class="book-badge">
+                    {% if book.is_bestseller %}
+                        <i class="fas fa-crown"></i>
+                        <span>Bestseller</span>
+                    {% elif book.is_new_arrival %}
+                        <i class="fas fa-clock"></i>
+                        <span>New</span>
+                    {% elif book.is_featured %}
+                        <i class="fas fa-star"></i>
+                        <span>Featured</span>
+                    {% else %}
+                        <i class="fas fa-book-open"></i>
+                        <span>E-Book</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="book-content">
+                <h3 class="book-title">{{ book.title }}</h3>
+                <p class="book-author">by {{ book.author }}</p>
+                
+                <!-- Availability Indicator -->
+                {% if book.requires_special_request %}
+                <div class="availability restricted">
+                    <i class="fas fa-lock"></i>
+                    <span>Restricted - Requires Approval</span>
+                </div>
+                {% elif book.has_digital and book.has_physical %}
+                <div class="availability both">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Available in both formats</span>
+                </div>
+                {% elif book.has_digital %}
+                <div class="availability digital">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Read online instantly</span>
+                </div>
+                {% elif book.has_physical %}
+                    {% if book.available_copies > 0 %}
+                    <div class="availability physical">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ book.available_copies }} copy{{ 's' if book.available_copies != 1 }} available</span>
+                    </div>
+                    {% else %}
+                    <div class="availability physical" style="background: #fee2e2; color: #991b1b;">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Currently checked out</span>
+                    </div>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="book-meta">
+                    <span><i class="far fa-calendar"></i> {{ book.published_year or book.created_at.strftime('%Y') }}</span>
+                    {% if book.pages %}
+                    <span><i class="far fa-file"></i> {{ book.pages }}p</span>
+                    {% endif %}
+                    <span><i class="fas fa-star text-yellow-400"></i> {{ book.average_rating|default('0.0', true) }}</span>
+                    {% if book.has_digital %}
+                    <span><i class="fas fa-download"></i> {{ book.download_count|default(0) }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="book-footer">
+                    <!-- Conditional button based on book type and access -->
+                    {% if book.requires_special_request %}
+                        {% if session.user_id %}
+                            <a href="{{ url_for('books.request_special_access', book_id=book.id, request_type='read') }}" class="request-link">
+                                <i class="fas fa-paper-plane"></i> Request Access
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}" class="request-link">
+                                <i class="fas fa-sign-in-alt"></i> Login to Request
+                            </a>
+                        {% endif %}
+                    {% elif book.has_digital %}
+                        <a href="{{ url_for('books.read', book_id=book.id) }}" class="read-link">
+                            <i class="fas fa-book-open"></i> Read Now
+                        </a>
+                    {% elif book.has_physical and book.available_copies > 0 %}
+                        <a href="{{ url_for('books.borrow', book_id=book.id) }}" class="read-link">
+                            <i class="fas fa-hand-holding-heart"></i> Borrow
+                        </a>
+                    {% elif book.has_physical %}
+                        <button class="read-link" style="background: #6b7280; border-color: #9ca3af;" disabled>
+                            <i class="fas fa-clock"></i> Unavailable
+                        </button>
+                    {% endif %}
+                    
+                    <!-- Wishlist Button -->
+                    {% if session.user_id %}
+                    <button onclick="toggleWishlist({{ book.id }})" class="wishlist-btn" data-book-id="{{ book.id }}">
+                        <i class="{% if book.id in wishlist_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
+        <div class="text-white/70 text-sm">
+            Showing {{ ((page-1) * per_page) + 1 }} - 
+            {% if page * per_page < total_results %}
+                {{ page * per_page }}
+            {% else %}
+                {{ total_results }}
+            {% endif %} 
+            of {{ total_results }} results
+        </div>
+        
+        <div class="pagination">
+            <!-- Previous Page -->
+            {% if page > 1 %}
+            <a href="{{ url_for('books.home', q=search_query, category=selected_category, format=selected_format, sort=selected_sort, page=page-1, per_page=per_page) }}" class="page-link">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled">
+                <i class="fas fa-chevron-left"></i>
+            </span>
+            {% endif %}
+            
+            <!-- Page Numbers -->
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                <span class="page-link active">{{ p }}</span>
+                {% elif p >= page - 2 and p <= page + 2 %}
+                <a href="{{ url_for('books.home', q=search_query, category=selected_category, format=selected_format, sort=selected_sort, page=p, per_page=per_page) }}" class="page-link">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            <!-- Next Page -->
+            {% if page < total_pages %}
+            <a href="{{ url_for('books.home', q=search_query, category=selected_category, format=selected_format, sort=selected_sort, page=page+1, per_page=per_page) }}" class="page-link">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% else %}
+            <span class="page-link disabled">
+                <i class="fas fa-chevron-right"></i>
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Page Size Selector -->
+        <select class="search-select min-w-[100px]" onchange="changePageSize(this.value)">
+            <option value="12" {% if per_page == 12 %}selected{% endif %}>12 per page</option>
+            <option value="24" {% if per_page == 24 %}selected{% endif %}>24 per page</option>
+            <option value="48" {% if per_page == 48 %}selected{% endif %}>48 per page</option>
+        </select>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- No Results -->
+    <div class="no-results">
+        <i class="fas fa-search"></i>
+        <h3>No Books Found</h3>
+        <p>We couldn't find any books matching your search criteria.</p>
+        
+        <div class="mt-6">
+            <a href="{{ url_for('books.home') }}" class="inline-flex items-center px-8 py-4 bg-yellow-400 text-blue-900 rounded-xl font-bold text-lg hover:bg-yellow-300 transition">
+                <i class="fas fa-home mr-3"></i> Back to Home
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleWishlist(bookId) {
+    fetch('/wishlist/toggle/' + bookId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            var btn = document.querySelector('[data-book-id="' + bookId + '"] i');
+            if (btn) {
+                if (btn.classList.contains('far')) {
+                    btn.classList.remove('far');
+                    btn.classList.add('fas');
+                    showNotification('✅ Added to wishlist');
+                } else {
+                    btn.classList.remove('fas');
+                    btn.classList.add('far');
+                    showNotification('🗑️ Removed from wishlist');
+                }
+            }
+        } else if (data.message === 'Please login first') {
+            showNotification('🔐 Please login to use wishlist', 'error');
+            setTimeout(function() {
+                window.location.href = "{{ url_for('auth.login') }}";
+            }, 2000);
+        }
+    })
+    .catch(function(error) {
+        console.log('Error:', error);
+        showNotification('❌ Error updating wishlist', 'error');
+    });
+}
+
+function showNotification(message, type) {
+    var notification = document.createElement('div');
+    notification.className = 'notification' + (type === 'error' ? ' error' : '');
+    notification.innerHTML = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(function() {
+        notification.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(function() {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
+function changePageSize(size) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('per_page', size);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+</script>
+{% endblock %}

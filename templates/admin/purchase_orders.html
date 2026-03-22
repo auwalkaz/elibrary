@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .po-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 2px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+    
+    .po-card:hover {
+        border-color: #ffd700;
+    }
+    
+    .po-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .po-number {
+        font-family: monospace;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a3c1a;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .status-draft { background: #e5e7eb; color: #374151; }
+    .status-sent { background: #dbeafe; color: #1e40af; }
+    .status-received { background: #dcfce7; color: #166534; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed #e5e7eb;
+    }
+    
+    .total-row {
+        font-weight: 600;
+        background: #f9fafb;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-white">📦 Purchase Orders</h1>
+        <a href="{{ url_for('admin.new_purchase_order') }}" 
+           class="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 transition flex items-center gap-2">
+            <i class="fas fa-plus"></i> New Purchase Order
+        </a>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="flex gap-2 mb-6">
+        <a href="{{ url_for('admin.purchase_orders', status='all') }}" 
+           class="px-4 py-2 rounded-full border {% if current_status == 'all' %}bg-green-700 text-white border-green-700{% else %}bg-white{% endif %}">
+            All
+        </a>
+        <a href="{{ url_for('admin.purchase_orders', status='draft') }}" 
+           class="px-4 py-2 rounded-full border {% if current_status == 'draft' %}bg-green-700 text-white border-green-700{% else %}bg-white{% endif %}">
+            Draft
+        </a>
+        <a href="{{ url_for('admin.purchase_orders', status='sent') }}" 
+           class="px-4 py-2 rounded-full border {% if current_status == 'sent' %}bg-green-700 text-white border-green-700{% else %}bg-white{% endif %}">
+            Sent
+        </a>
+        <a href="{{ url_for('admin.purchase_orders', status='received') }}" 
+           class="px-4 py-2 rounded-full border {% if current_status == 'received' %}bg-green-700 text-white border-green-700{% else %}bg-white{% endif %}">
+            Received
+        </a>
+    </div>
+    
+    <!-- Purchase Orders List -->
+    {% for po in purchase_orders %}
+    <div class="po-card">
+        <div class="po-header">
+            <div>
+                <span class="po-number">{{ po.po_number }}</span>
+                <span class="ml-3 text-gray-500">{{ po.order_date.strftime('%Y-%m-%d') }}</span>
+            </div>
+            <span class="status-badge status-{{ po.status }}">{{ po.status|upper }}</span>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <div>
+                <span class="text-gray-500">Vendor:</span>
+                <span class="font-medium">{{ po.vendor_name }}</span>
+            </div>
+            <div>
+                <span class="text-gray-500">Expected:</span>
+                <span class="font-medium">{{ po.expected_delivery.strftime('%Y-%m-%d') if po.expected_delivery else 'Not set' }}</span>
+            </div>
+            <div>
+                <span class="text-gray-500">Total:</span>
+                <span class="font-medium">₦{{ "%.2f"|format(po.total_cost) }}</span>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 p-3 rounded-lg">
+            <h4 class="font-medium mb-2">Items:</h4>
+            {% for item in po.items %}
+            <div class="item-row">
+                <span>{{ item.title }} ({{ item.author }})</span>
+                <span>{{ item.quantity }} × ₦{{ "%.2f"|format(item.unit_price) }}</span>
+            </div>
+            {% endfor %}
+            <div class="total-row flex justify-between">
+                <span>Total</span>
+                <span>₦{{ "%.2f"|format(po.total_cost) }}</span>
+            </div>
+        </div>
+        
+        <div class="mt-4 flex gap-2">
+            {% if po.status == 'draft' %}
+            <button onclick="sendOrder({{ po.id }})" 
+                    class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <i class="fas fa-paper-plane mr-1"></i> Send Order
+            </button>
+            <button onclick="editOrder({{ po.id }})" 
+                    class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700">
+                <i class="fas fa-edit mr-1"></i> Edit
+            </button>
+            {% elif po.status == 'sent' %}
+            <button onclick="markReceived({{ po.id }})" 
+                    class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+                <i class="fas fa-check-double mr-1"></i> Mark Received
+            </button>
+            {% endif %}
+            <a href="{{ url_for('admin.view_purchase_order', po_id=po.id) }}" 
+               class="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700">
+                <i class="fas fa-eye mr-1"></i> View
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function sendOrder(poId) {
+    if (confirm('Send this purchase order to the vendor?')) {
+        fetch(`/admin/purchase-order/${poId}/send`, {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.message);
+        });
+    }
+}
+
+function markReceived(poId) {
+    window.location.href = `/admin/purchase-order/${poId}/receive`;
+}
+</script>
+{% endblock %}

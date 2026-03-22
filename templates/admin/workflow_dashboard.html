@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .workflow-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        border: 2px solid #ffd700;
+        color: white;
+    }
+    
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .workflow-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .workflow-card:hover {
+        transform: translateY(-5px);
+        border-color: #ffd700;
+        box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+    }
+    
+    .workflow-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #ffd700, #1a3c1a);
+    }
+    
+    .workflow-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .workflow-icon.acquisition { background: #fef3c7; color: #92400e; }
+    .workflow-icon.cataloging { background: #dbeafe; color: #1e40af; }
+    .workflow-icon.circulation { background: #dcfce7; color: #166534; }
+    .workflow-icon.reports { background: #f3e8ff; color: #6b21a8; }
+    
+    .stat-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .stat-badge.pending { background: #fef3c7; color: #92400e; }
+    .stat-badge.progress { background: #dbeafe; color: #1e40af; }
+    .stat-badge.completed { background: #dcfce7; color: #166534; }
+    
+    .quick-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .quick-action-btn {
+        background: #f3f4f6;
+        color: #374151;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .quick-action-btn:hover {
+        background: #ffd700;
+        color: #0a1f3a;
+    }
+    
+    .activity-timeline {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 2px solid #e5e7eb;
+    }
+    
+    .timeline-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .timeline-item:last-child { border-bottom: none; }
+    
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a3c1a;
+    }
+    
+    .progress-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a1f3a;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workflow-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">📊 Library Workflow Dashboard</h1>
+                <p class="text-white/80">Manage the complete lifecycle from acquisition to circulation</p>
+            </div>
+            <div class="text-right">
+                <div class="text-sm text-white/60">{{ now.strftime('%B %d, %Y') }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="workflow-grid">
+        <!-- Acquisition Card -->
+        <div class="workflow-card">
+            <div class="workflow-icon acquisition">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Acquisition</h3>
+            <div class="progress-stats">
+                <div>
+                    <div class="stat-number">{{ pending_requests }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ approved_requests }}</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ total_orders }}</div>
+                    <div class="stat-label">Orders</div>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="{{ url_for('admin.acquisition_requests') }}" class="quick-action-btn">
+                    <i class="fas fa-list"></i> View Requests
+                </a>
+                <a href="{{ url_for('admin.purchase_orders') }}" class="quick-action-btn">
+                    <i class="fas fa-file-invoice"></i> Purchase Orders
+                </a>
+                <a href="{{ url_for('admin.new_acquisition_request') }}" class="quick-action-btn">
+                    <i class="fas fa-plus"></i> New Request
+                </a>
+            </div>
+        </div>
+        
+        <!-- Cataloging Card -->
+        <div class="workflow-card">
+            <div class="workflow-icon cataloging">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Cataloging</h3>
+            <div class="progress-stats">
+                <div>
+                    <div class="stat-number">{{ pending_cataloging }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ in_progress_cataloging }}</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ completed_cataloging }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="{{ url_for('admin.cataloging_queue') }}" class="quick-action-btn">
+                    <i class="fas fa-list"></i> View Queue
+                </a>
+                <a href="{{ url_for('admin.cataloging_stats') }}" class="quick-action-btn">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </a>
+            </div>
+        </div>
+        
+        <!-- Circulation Card -->
+        <div class="workflow-card">
+            <div class="workflow-icon circulation">
+                <i class="fas fa-hand-holding-heart"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Circulation</h3>
+            <div class="progress-stats">
+                <div>
+                    <div class="stat-number">{{ active_checkouts }}</div>
+                    <div class="stat-label">Checked Out</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ overdue_items }}</div>
+                    <div class="stat-label">Overdue</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ active_reservations }}</div>
+                    <div class="stat-label">Reservations</div>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="{{ url_for('admin.circulation') }}" class="quick-action-btn">
+                    <i class="fas fa-list"></i> All Transactions
+                </a>
+                <a href="{{ url_for('admin.checkout') }}" class="quick-action-btn">
+                    <i class="fas fa-sign-out-alt"></i> Checkout
+                </a>
+                <a href="{{ url_for('admin.checkin') }}" class="quick-action-btn">
+                    <i class="fas fa-sign-in-alt"></i> Check In
+                </a>
+            </div>
+        </div>
+        
+        <!-- Reports Card -->
+        <div class="workflow-card">
+            <div class="workflow-icon reports">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Reports & Analytics</h3>
+            <div class="progress-stats">
+                <div>
+                    <div class="stat-number">{{ total_books }}</div>
+                    <div class="stat-label">Total Books</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ total_users }}</div>
+                    <div class="stat-label">Users</div>
+                </div>
+                <div>
+                    <div class="stat-number">₦{{ total_fines }}</div>
+                    <div class="stat-label">Fines Collected</div>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <a href="{{ url_for('admin.workflow_reports') }}" class="quick-action-btn">
+                    <i class="fas fa-chart-line"></i> View Reports
+                </a>
+                <a href="{{ url_for('admin.export_data') }}" class="quick-action-btn">
+                    <i class="fas fa-download"></i> Export Data
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity Timeline -->
+    <div class="activity-timeline mt-8">
+        <h3 class="text-xl font-bold mb-4 flex items-center">
+            <i class="fas fa-history text-green-700 mr-2"></i>
+            Recent Workflow Activity
+        </h3>
+        
+        <div class="space-y-2">
+            {% for activity in recent_activities %}
+            <div class="timeline-item">
+                <div class="timeline-icon">
+                    {% if activity.type == 'acquisition' %}
+                        <i class="fas fa-shopping-cart"></i>
+                    {% elif activity.type == 'cataloging' %}
+                        <i class="fas fa-book-open"></i>
+                    {% elif activity.type == 'circulation' %}
+                        <i class="fas fa-hand-holding-heart"></i>
+                    {% else %}
+                        <i class="fas fa-bell"></i>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium">{{ activity.description }}</p>
+                    <p class="text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i> {{ activity.time }}
+                        {% if activity.user %}
+                        • <i class="far fa-user mr-1"></i> {{ activity.user }}
+                        {% endif %}
+                    </p>
+                </div>
+                {% if activity.status %}
+                <span class="stat-badge {{ activity.status }}">{{ activity.status|upper }}</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Quick Actions Bar -->
+    <div class="fixed bottom-8 right-8">
+        <div class="relative group">
+            <button class="w-14 h-14 bg-green-700 text-white rounded-full shadow-lg hover:bg-green-800 transition flex items-center justify-center">
+                <i class="fas fa-plus text-2xl"></i>
+            </button>
+            <div class="absolute bottom-16 right-0 hidden group-hover:block bg-white rounded-lg shadow-xl p-2 min-w-[200px]">
+                <a href="{{ url_for('admin.new_acquisition_request') }}" class="block px-4 py-2 hover:bg-gray-100 rounded">
+                    <i class="fas fa-shopping-cart w-5"></i> New Acquisition
+                </a>
+                <a href="{{ url_for('admin.checkout') }}" class="block px-4 py-2 hover:bg-gray-100 rounded">
+                    <i class="fas fa-sign-out-alt w-5"></i> Quick Checkout
+                </a>
+                <a href="{{ url_for('admin.checkin') }}" class="block px-4 py-2 hover:bg-gray-100 rounded">
+                    <i class="fas fa-sign-in-alt w-5"></i> Quick Return
+                </a>
+                <a href="{{ url_for('admin.upload') }}" class="block px-4 py-2 hover:bg-gray-100 rounded">
+                    <i class="fas fa-upload w-5"></i> Upload Book
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

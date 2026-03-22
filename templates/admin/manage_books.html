@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Manage Books</h1>
+        <a href="{{ url_for('admin.cataloging') }}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-plus mr-2"></i>Add New Book
+        </a>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="border-b border-gray-200 mb-6">
+        <nav class="-mb-px flex space-x-8">
+            <a href="{{ url_for('admin.manage_books', filter='all') }}" 
+               class="{% if filter_type == 'all' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                All Books
+            </a>
+            <a href="{{ url_for('admin.manage_books', filter='featured') }}" 
+               class="{% if filter_type == 'featured' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Featured
+            </a>
+            <a href="{{ url_for('admin.manage_books', filter='digital') }}" 
+               class="{% if filter_type == 'digital' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Digital
+            </a>
+            <a href="{{ url_for('admin.manage_books', filter='physical') }}" 
+               class="{% if filter_type == 'physical' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Physical
+            </a>
+            <a href="{{ url_for('admin.manage_books', filter='restricted') }}" 
+               class="{% if filter_type == 'restricted' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                Restricted
+            </a>
+            <a href="{{ url_for('admin.manage_books', filter='new') }}" 
+               class="{% if filter_type == 'new' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                New Arrivals
+            </a>
+        </nav>
+    </div>
+
+    <!-- Category and Tag Filters -->
+    <div class="mb-6 flex flex-wrap gap-4">
+        <div class="flex-1 min-w-[200px]">
+            <select id="category-filter" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat[0] }}" {% if current_category == cat[0] %}selected{% endif %}>{{ cat[0] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+            <select id="tag-filter" class="w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">All Tags</option>
+                {% for tag in popular_tags %}
+                <option value="{{ tag[0] }}" {% if current_tag == tag[0] %}selected{% endif %}>{{ tag[0] }} ({{ tag[1] }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            Apply Filters
+        </button>
+    </div>
+    
+    <!-- Books Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cover</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for book in books %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ book.id }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if book.cover_image %}
+                        <!-- FIXED: Added 'covers/' prefix to the path -->
+                        <img src="{{ url_for('admin.uploaded_file', filename='covers/' + book.cover_image) }}" 
+                             alt="{{ book.title }}" 
+                             class="h-12 w-10 object-cover rounded shadow"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML += '<div class=\'h-12 w-10 bg-gray-200 rounded flex items-center justify-center\'><svg class=\'h-6 w-6 text-gray-400\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253\'></path></svg></div>');">
+                        {% else %}
+                        <div class="h-12 w-10 bg-gray-200 rounded flex items-center justify-center">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ book.title[:60] }}{% if book.title|length > 60 %}...{% endif %}</div>
+                        {% if book.subtitle %}
+                        <div class="text-sm text-gray-500">{{ book.subtitle[:40] }}{% if book.subtitle|length > 40 %}...{% endif %}</div>
+                        {% endif %}
+                        {% if book.isbn %}
+                        <div class="text-xs text-gray-400 mt-1">ISBN: {{ book.isbn }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ book.author }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ book.category or 'Uncategorized' }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex space-x-1">
+                                {% if book.has_digital %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Digital</span>
+                                {% endif %}
+                                {% if book.has_physical %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Physical</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex space-x-1">
+                                {% if book.requires_special_request %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Restricted</span>
+                                {% endif %}
+                                {% if book.is_featured %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Featured</span>
+                                {% endif %}
+                            </div>
+                            {% if book.has_physical %}
+                            <div class="text-xs text-gray-500 mt-1">
+                                {{ book.available_copies }}/{{ book.total_copies }} available
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex flex-col space-y-2">
+                            <a href="{{ url_for('admin.edit_book', book_id=book.id) }}" 
+                               class="text-blue-600 hover:text-blue-900 flex items-center">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </a>
+                            {% if book.has_physical %}
+                            <a href="{{ url_for('admin.book_copies', book_id=book.id) }}" 
+                               class="text-green-600 hover:text-green-900 flex items-center">
+                                <i class="fas fa-copy mr-1"></i>Copies
+                            </a>
+                            {% endif %}
+                            <button onclick="deleteBook({{ book.id }}, '{{ book.title|replace("'", "\\'")|replace('"', '&quot;')|safe }}')" 
+                                    class="text-red-600 hover:text-red-900 flex items-center text-left">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        <p class="mt-4 text-lg">No books found</p>
+                        <p class="text-sm text-gray-400 mb-4">Try adjusting your filters or add a new book</p>
+                        <a href="{{ url_for('admin.cataloging') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            <i class="fas fa-plus mr-2"></i>Add New Book
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="mt-6 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+            Showing {{ ((page-1) * 20) + 1 }} - 
+            {% if page * 20 < total %}
+                {{ page * 20 }}
+            {% else %}
+                {{ total }}
+            {% endif %}
+            of {{ total }} books
+        </div>
+        <div class="flex justify-center">
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                {% if page > 1 %}
+                <a href="{{ url_for('admin.manage_books', page=page-1, filter=filter_type, category=current_category, tag=current_tag) }}" 
+                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Previous</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                {% endif %}
+
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                        {{ p }}
+                    </span>
+                    {% elif p >= page - 2 and p <= page + 2 %}
+                    <a href="{{ url_for('admin.manage_books', page=p, filter=filter_type, category=current_category, tag=current_tag) }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        {{ p }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < total_pages %}
+                <a href="{{ url_for('admin.manage_books', page=page+1, filter=filter_type, category=current_category, tag=current_tag) }}" 
+                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span class="sr-only">Next</span>
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function deleteBook(bookId, bookTitle) {
+    if (confirm(`Are you sure you want to delete "${bookTitle}"? This action cannot be undone.`)) {
+        fetch(`/admin/book/${bookId}/delete`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Find and remove the row
+                const rows = document.querySelectorAll('tbody tr');
+                for (let row of rows) {
+                    if (row.querySelector('td:first-child').textContent.includes(bookId)) {
+                        row.remove();
+                        break;
+                    }
+                }
+                showNotification(`✅ Book "${bookTitle}" deleted successfully`, 'success');
+            } else {
+                showNotification(`❌ Error: ${data.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('❌ An error occurred. Please try again.', 'error');
+        });
+    }
+}
+
+function applyFilters() {
+    const category = document.getElementById('category-filter').value;
+    const tag = document.getElementById('tag-filter').value;
+    const filterType = new URLSearchParams(window.location.search).get('filter') || 'all';
+    
+    let url = `{{ url_for('admin.manage_books') }}?filter=${filterType}`;
+    if (category) url += `&category=${encodeURIComponent(category)}`;
+    if (tag) url += `&tag=${encodeURIComponent(tag)}`;
+    
+    window.location.href = url;
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    } text-white transition-opacity duration-500`;
+    notification.innerHTML = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+
+// Handle category filter change
+document.getElementById('category-filter')?.addEventListener('change', function() {
+    if (this.value) {
+        applyFilters();
+    }
+});
+
+// Handle tag filter change
+document.getElementById('tag-filter')?.addEventListener('change', function() {
+    if (this.value) {
+        applyFilters();
+    }
+});
+</script>
+{% endblock %}

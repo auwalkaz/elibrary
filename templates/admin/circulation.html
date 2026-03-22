@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #4299e1;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-tab {
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        color: #4a5568;
+    }
+    
+    .filter-tab.active {
+        background: #4299e1;
+        color: white;
+    }
+    
+    .transaction-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .transaction-card.active { border-left-color: #10b981; }
+    .transaction-card.overdue { border-left-color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">📚 Circulation</h1>
+    
+    <!-- Quick Actions -->
+    <div class="flex gap-4 mb-6">
+        <a href="{{ url_for('admin.checkout') }}" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+            <i class="fas fa-sign-out-alt mr-1"></i> Checkout
+        </a>
+        <a href="{{ url_for('admin.checkin') }}" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+            <i class="fas fa-sign-in-alt mr-1"></i> Check In
+        </a>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">5</div>
+            <div class="text-gray-600">Active Checkouts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">2</div>
+            <div class="text-gray-600">Overdue</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">3</div>
+            <div class="text-gray-600">Reservations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">₦150</div>
+            <div class="text-gray-600">Unpaid Fines</div>
+        </div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="#" class="filter-tab active">Active</a>
+        <a href="#" class="filter-tab">Overdue</a>
+        <a href="#" class="filter-tab">History</a>
+    </div>
+    
+    <!-- Sample Transactions -->
+    <div class="transaction-card active">
+        <div class="flex justify-between">
+            <div>
+                <h3 class="text-xl font-semibold">The Art of War</h3>
+                <p class="text-gray-600">Borrower: Lt. Col. John Smith</p>
+            </div>
+            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">ACTIVE</span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mt-4 text-sm">
+            <div><span class="text-gray-500">Checkout:</span> 2024-02-15</div>
+            <div><span class="text-gray-500">Due:</span> 2024-03-01</div>
+            <div><span class="text-gray-500">Fine:</span> ₦0</div>
+        </div>
+        <div class="mt-4">
+            <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                <i class="fas fa-sign-in-alt mr-1"></i> Check In
+            </button>
+        </div>
+    </div>
+    
+    <div class="transaction-card overdue">
+        <div class="flex justify-between">
+            <div>
+                <h3 class="text-xl font-semibold">On War</h3>
+                <p class="text-gray-600">Borrower: Maj. Sarah Johnson</p>
+            </div>
+            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">OVERDUE</span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mt-4 text-sm">
+            <div><span class="text-gray-500">Checkout:</span> 2024-02-01</div>
+            <div><span class="text-gray-500">Due:</span> 2024-02-15</div>
+            <div><span class="text-gray-500">Fine:</span> ₦50</div>
+        </div>
+        <div class="mt-4">
+            <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                <i class="fas fa-sign-in-alt mr-1"></i> Check In
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,656 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .pending-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #f59e0b;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .pending-card.approved {
+        border-left-color: #10b981;
+    }
+    
+    .pending-card.rejected {
+        border-left-color: #ef4444;
+    }
+    
+    .pending-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .user-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #4b5563;
+    }
+    
+    .user-detail i {
+        width: 20px;
+        color: #1a3c1a;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-approve, .btn-reject, .btn-view {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-approve {
+        background: #10b981;
+        color: white;
+    }
+    
+    .btn-approve:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .btn-reject {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn-reject:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+    }
+    
+    .btn-view {
+        background: #6b7280;
+        color: white;
+    }
+    
+    .btn-view:hover {
+        background: #4b5563;
+        transform: translateY(-1px);
+    }
+    
+    .btn-approve:disabled, .btn-reject:disabled, .btn-view:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .rejection-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+        background: white;
+        max-width: 500px;
+        margin: 100px auto;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        text-align: center;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card.pending { border-color: #f59e0b; }
+    .stat-card.approved { border-color: #10b981; }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a3c1a;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-tab {
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        border: 2px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+    }
+    
+    .filter-tab:hover {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+    }
+    
+    .filter-tab.active {
+        background: #1a3c1a;
+        color: white;
+        border-color: #1a3c1a;
+    }
+    
+    .toast-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1100;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        animation: slideInRight 0.3s ease-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .toast-success {
+        background: #10b981;
+    }
+    
+    .toast-error {
+        background: #ef4444;
+    }
+    
+    .toast-info {
+        background: #3b82f6;
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-white mb-6">User Registration Approvals</h1>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card pending">
+            <div class="stat-number">{{ stats.pending }}</div>
+            <div class="text-gray-600">Pending Approval</div>
+        </div>
+        <div class="stat-card approved">
+            <div class="stat-number">{{ stats.approved }}</div>
+            <div class="text-gray-600">Approved Today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total }}</div>
+            <div class="text-gray-600">Total Users</div>
+        </div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="{{ url_for('admin.pending_users', filter='pending') }}" 
+           class="filter-tab {% if current_filter == 'pending' %}active{% endif %}">
+            Pending
+        </a>
+        <a href="{{ url_for('admin.pending_users', filter='approved') }}" 
+           class="filter-tab {% if current_filter == 'approved' %}active{% endif %}">
+            Approved
+        </a>
+        <a href="{{ url_for('admin.pending_users', filter='rejected') }}" 
+           class="filter-tab {% if current_filter == 'rejected' %}active{% endif %}">
+            Rejected
+        </a>
+        <a href="{{ url_for('admin.pending_users', filter='all') }}" 
+           class="filter-tab {% if current_filter == 'all' %}active{% endif %}">
+            All
+        </a>
+    </div>
+    
+    <!-- Users List -->
+    {% if users %}
+        {% for user in users %}
+        <div class="pending-card {% if user.approval_status == 'approved' %}approved{% elif user.approval_status == 'rejected' %}rejected{% endif %}" id="user-{{ user.id }}">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800">{{ user.full_name or user.username }}</h3>
+                    <p class="text-sm text-gray-500">Registered: {{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-sm font-semibold
+                    {% if user.approval_status == 'pending' %}bg-yellow-100 text-yellow-800
+                    {% elif user.approval_status == 'approved' %}bg-green-100 text-green-800
+                    {% else %}bg-red-100 text-red-800{% endif %}">
+                    {{ user.approval_status|upper }}
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                    <div class="user-detail"><i class="fas fa-user"></i> Username: {{ user.username }}</div>
+                    <div class="user-detail"><i class="fas fa-envelope"></i> Email: {{ user.email }}</div>
+                    <div class="user-detail"><i class="fas fa-phone"></i> Phone: {{ user.phone }}</div>
+                </div>
+                <div>
+                    <div class="user-detail"><i class="fas fa-id-card"></i> Service #: {{ user.service_number or 'N/A' }}</div>
+                    <div class="user-detail"><i class="fas fa-map-marker-alt"></i> Address: {{ user.address or 'N/A' }}</div>
+                </div>
+            </div>
+            
+            {% if user.approval_status == 'pending' %}
+            <div class="action-buttons">
+                <button onclick="approveUser({{ user.id }})" class="btn-approve" id="approve-btn-{{ user.id }}">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+                <button onclick="showRejectModal({{ user.id }})" class="btn-reject">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+                <button onclick="viewUserDetails({{ user.id }})" class="btn-view">
+                    <i class="fas fa-eye"></i> View Details
+                </button>
+            </div>
+            {% elif user.approval_status == 'rejected' and user.rejection_reason %}
+            <div class="mt-3 p-3 bg-red-50 rounded">
+                <p class="text-sm text-red-700"><strong>Rejection Reason:</strong> {{ user.rejection_reason }}</p>
+                {% if user.approved_by %}<p class="text-xs text-gray-500 mt-1">Rejected by: {{ user.approver.username if user.approver else 'Admin' }} at {{ user.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>{% endif %}
+            </div>
+            {% elif user.approval_status == 'approved' and user.approved_by %}
+            <div class="mt-3 p-3 bg-green-50 rounded">
+                <p class="text-sm text-green-700"><strong>Approved</strong></p>
+                <p class="text-xs text-gray-500">Approved by: {{ user.approver.username if user.approver else 'Admin' }} at {{ user.approved_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-12 bg-white rounded-lg">
+            <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700">No users found</h3>
+            <p class="text-gray-500">There are no users matching the selected filter.</p>
+        </div>
+    {% endif %}
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="flex justify-center mt-8">
+        <nav class="inline-flex gap-2">
+            {% for p in range(1, total_pages + 1) %}
+            <a href="{{ url_for('admin.pending_users', filter=current_filter, page=p) }}" 
+               class="px-4 py-2 border-2 border-yellow-400 rounded-lg {% if p == page %}bg-yellow-400 text-blue-900{% else %}bg-white text-gray-700{% endif %}">
+                {{ p }}
+            </a>
+            {% endfor %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Rejection Modal -->
+<div id="rejectionModal" class="rejection-modal">
+    <div class="modal-content">
+        <h3 class="text-xl font-bold mb-4">Reject Registration</h3>
+        <p class="text-gray-600 mb-4">Please provide a reason for rejection:</p>
+        <textarea id="rejectionReason" rows="4" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Enter rejection reason..."></textarea>
+        <div class="flex justify-end gap-2">
+            <button onclick="closeRejectModal()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cancel</button>
+            <button onclick="submitRejection()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Reject</button>
+        </div>
+    </div>
+</div>
+<script>
+// ============================================
+// PENDING USERS MANAGEMENT
+// ============================================
+
+let currentUserId = null;
+
+// Get CSRF token from meta tag or form
+function getCsrfToken() {
+    // Try to get from meta tag
+    const metaTag = document.querySelector('meta[name="csrf-token"]');
+    if (metaTag) {
+        return metaTag.getAttribute('content');
+    }
+    // Try to get from form input
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    if (csrfInput) {
+        return csrfInput.value;
+    }
+    return '';
+}
+
+// Toast notification function
+function showToast(message, type = 'success') {
+    const existingToast = document.querySelector('.toast-message');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-message toast-${type}`;
+    toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle')} mr-2"></i>
+        ${message}
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Approve user function with CSRF token
+window.approveUser = async function(userId) {
+    console.log('Approve button clicked for user:', userId);
+    
+    if (!confirm('Are you sure you want to approve this user?')) {
+        return;
+    }
+    
+    const btn = document.getElementById(`approve-btn-${userId}`);
+    if (!btn) {
+        console.error('Button not found for user:', userId);
+        return;
+    }
+    
+    const originalHtml = btn.innerHTML;
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Approving...';
+    
+    // Get CSRF token
+    const csrfToken = getCsrfToken();
+    console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+    
+    try {
+        const response = await fetch(`/admin/user/${userId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken  // Add CSRF token here
+            },
+            credentials: 'same-origin'
+        });
+        
+        console.log('Response status:', response.status);
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            console.log('Response data:', data);
+            
+            if (data.success) {
+                showToast(data.message || 'User approved successfully!', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showToast(data.message || 'Failed to approve user', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        } else {
+            const text = await response.text();
+            console.error('Non-JSON response:', text.substring(0, 200));
+            showToast('Server error: ' + text.substring(0, 100), 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    } catch (error) {
+        console.error('Error in approveUser:', error);
+        showToast('Connection error: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
+};
+
+// Show reject modal
+window.showRejectModal = function(userId) {
+    console.log('Show reject modal for user:', userId);
+    currentUserId = userId;
+    const modal = document.getElementById('rejectionModal');
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            const textarea = document.getElementById('rejectionReason');
+            if (textarea) textarea.focus();
+        }, 100);
+    }
+};
+
+// Close reject modal
+window.closeRejectModal = function() {
+    const modal = document.getElementById('rejectionModal');
+    if (modal) {
+        modal.style.display = 'none';
+        const textarea = document.getElementById('rejectionReason');
+        if (textarea) textarea.value = '';
+        currentUserId = null;
+        document.body.style.overflow = 'auto';
+    }
+};
+
+// Submit rejection with CSRF token
+window.submitRejection = async function() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    if (!reason) {
+        showToast('Please provide a rejection reason', 'error');
+        return;
+    }
+    
+    if (!currentUserId) {
+        showToast('No user selected', 'error');
+        return;
+    }
+    
+    const modal = document.getElementById('rejectionModal');
+    const rejectBtn = modal.querySelector('.bg-red-500');
+    const originalText = rejectBtn.innerHTML;
+    
+    // Get CSRF token
+    const csrfToken = getCsrfToken();
+    
+    rejectBtn.disabled = true;
+    rejectBtn.innerHTML = '<span class="spinner"></span> Rejecting...';
+    
+    try {
+        const response = await fetch(`/admin/user/${currentUserId}/reject`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken  // Add CSRF token here
+            },
+            body: JSON.stringify({ reason: reason }),
+            credentials: 'same-origin'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(data.message || 'User rejected successfully', 'success');
+            closeRejectModal();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast(data.message || 'Failed to reject user', 'error');
+            rejectBtn.disabled = false;
+            rejectBtn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Error in submitRejection:', error);
+        showToast('Connection error: ' + error.message, 'error');
+        rejectBtn.disabled = false;
+        rejectBtn.innerHTML = originalText;
+    }
+};
+
+// View user details
+window.viewUserDetails = function(userId) {
+    window.location.href = `/admin/user/${userId}/view`;
+};
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('rejectionModal');
+    if (modal && modal.style.display === 'block') {
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent && !modalContent.contains(event.target)) {
+            closeRejectModal();
+        }
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeRejectModal();
+    }
+});
+
+// Add CSS for spinner if not already present
+if (!document.querySelector('#pending-users-style')) {
+    const style = document.createElement('style');
+    style.id = 'pending-users-style';
+    style.textContent = `
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .toast-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .toast-success {
+            background: #10b981;
+        }
+        
+        .toast-error {
+            background: #ef4444;
+        }
+        
+        .toast-info {
+            background: #3b82f6;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+console.log('Pending users page loaded - CSRF token will be included');
+</script>
+{% endblock %}

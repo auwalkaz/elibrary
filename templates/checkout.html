@@ -1,0 +1,556 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .checkout-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .barcode-scanner {
+        background: #1a1a1a;
+        color: #0f0;
+        font-family: monospace;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-size: 1.5rem;
+        letter-spacing: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .barcode-scanner:hover {
+        background: #2a2a2a;
+        transform: scale(1.02);
+    }
+    
+    .patron-card {
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid #ffd700;
+        transition: all 0.3s ease;
+    }
+    
+    .patron-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .book-item {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+    }
+    
+    .book-item:hover {
+        border-color: #ffd700;
+        transform: translateX(5px);
+    }
+    
+    .due-date-picker {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .search-result-item {
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .search-result-item:hover {
+        background: #f9fafb;
+        transform: translateX(5px);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .status-active {
+        background: #10b981;
+        color: white;
+    }
+    
+    .status-expired {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .status-no-card {
+        background: #6b7280;
+        color: white;
+    }
+    
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #ffd700;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container py-8">
+    <h1 class="text-3xl font-bold text-white mb-6 text-center">📤 Check Out Books</h1>
+    
+    <!-- Patron Search -->
+    <div class="bg-white rounded-lg p-6 mb-6 shadow-lg">
+        <h3 class="font-semibold mb-4 text-gray-800">Step 1: Find Patron</h3>
+        
+        <div class="relative mb-4">
+            <div class="flex gap-2">
+                <input type="text" id="patronSearch" placeholder="Search by name, email, or library card..." 
+                       class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       autocomplete="off">
+                <button onclick="searchPatron()" class="px-6 bg-green-700 text-white rounded-lg hover:bg-green-800 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            <div id="searchResults" class="search-results hidden"></div>
+        </div>
+        
+        <div class="barcode-scanner" onclick="focusBarcodeInput()">
+            <i class="fas fa-camera mr-2"></i> SCAN CARD
+            <div class="text-xs text-gray-400 mt-1">Click here and scan patron card</div>
+        </div>
+        
+        <!-- Patron Info (shown when selected) -->
+        <div id="patronInfo" class="patron-card hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h4 class="text-xl font-bold" id="patronName"></h4>
+                <span id="patronStatus" class="status-badge"></span>
+            </div>
+            <p><i class="fas fa-id-card mr-2"></i> <span id="patronCard"></span></p>
+            <p><i class="fas fa-envelope mr-2"></i> <span id="patronEmail"></span></p>
+            <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-gray-600">
+                <div>
+                    <p class="text-xs text-gray-300">Currently Borrowing</p>
+                    <p class="font-bold" id="patronCurrentBorrowings">0</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-300">Remaining Limit</p>
+                    <p class="font-bold" id="patronRemainingLimit">5</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-300">Card Expires</p>
+                    <p class="text-sm" id="patronExpiry">N/A</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-300">Fines</p>
+                    <p class="font-bold" id="patronFines">₦0.00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Books to Checkout -->
+    <div class="bg-white rounded-lg p-6 mb-6 shadow-lg">
+        <h3 class="font-semibold mb-4 text-gray-800">Step 2: Add Books</h3>
+        
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="bookSearch" placeholder="Scan barcode or search by title..." 
+                   class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   autocomplete="off" disabled>
+            <button onclick="addBook()" id="addBookBtn" class="px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-plus"></i> Add
+            </button>
+        </div>
+        
+        <!-- Books List -->
+        <div id="booksList" class="mb-4 min-h-[200px]">
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-book-open text-4xl mb-2 block"></i>
+                <p>No books added yet. Scan barcodes above.</p>
+            </div>
+        </div>
+        
+        <!-- Due Date Selection -->
+        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+            <label class="block text-sm font-medium mb-2">Loan Period</label>
+            <select id="loanPeriod" class="due-date-picker w-full p-2 border rounded-lg" onchange="updateDueDate()">
+                <option value="7">7 days</option>
+                <option value="14" selected>14 days (standard)</option>
+                <option value="21">21 days</option>
+                <option value="30">30 days</option>
+            </select>
+            <p class="text-sm text-gray-500 mt-2">
+                <i class="fas fa-calendar-alt mr-1"></i> 
+                Due date: <span id="dueDateDisplay" class="font-semibold"></span>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Checkout Button -->
+    <button onclick="completeCheckout()" id="checkoutBtn" class="w-full bg-green-700 text-white py-4 rounded-lg text-lg font-bold hover:bg-green-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+        <i class="fas fa-hand-holding-heart mr-2"></i> Complete Checkout
+    </button>
+</div>
+
+<script>
+let selectedPatron = null;
+let books = [];
+let dueDate = new Date();
+
+function updateDueDate() {
+    const days = parseInt(document.getElementById('loanPeriod').value);
+    dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + days);
+    document.getElementById('dueDateDisplay').textContent = dueDate.toLocaleDateString();
+}
+
+function focusBarcodeInput() {
+    document.getElementById('bookSearch').focus();
+}
+
+// Patron search with debounce
+let searchTimeout;
+document.getElementById('patronSearch').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        document.getElementById('searchResults').classList.add('hidden');
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        fetch(`/admin/api/patron/search?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(patrons => {
+                if (patrons.length > 0) {
+                    showSearchResults(patrons);
+                } else {
+                    document.getElementById('searchResults').classList.add('hidden');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }, 300);
+});
+
+function showSearchResults(patrons) {
+    const resultsDiv = document.getElementById('searchResults');
+    let html = '';
+    
+    patrons.forEach(patron => {
+        const statusClass = !patron.has_card ? 'status-no-card' : (patron.is_expired ? 'status-expired' : 'status-active');
+        const statusText = !patron.has_card ? 'No Card' : (patron.is_expired ? 'Expired' : 'Active');
+        
+        html += `
+            <div class="search-result-item" onclick="selectPatron(${JSON.stringify(patron).replace(/"/g, '&quot;')})">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="font-medium text-gray-800">${escapeHtml(patron.full_name)}</div>
+                        <div class="text-sm text-gray-500">${escapeHtml(patron.email)}</div>
+                        <div class="text-xs text-gray-400">Card: ${patron.card_number || 'No card'}</div>
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+                <div class="text-xs text-gray-400 mt-1">
+                    Borrowing: ${patron.current_borrowings} / ${patron.current_borrowings + patron.remaining_limit}
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsDiv.innerHTML = html;
+    resultsDiv.classList.remove('hidden');
+}
+
+function selectPatron(patron) {
+    selectedPatron = patron;
+    
+    // Update patron info display
+    document.getElementById('patronInfo').classList.remove('hidden');
+    document.getElementById('patronName').textContent = patron.full_name;
+    document.getElementById('patronEmail').textContent = patron.email;
+    document.getElementById('patronCard').textContent = patron.card_number || 'No card';
+    document.getElementById('patronCurrentBorrowings').textContent = patron.current_borrowings;
+    document.getElementById('patronRemainingLimit').textContent = patron.remaining_limit;
+    document.getElementById('patronFines').textContent = `₦${(patron.total_fines || 0).toFixed(2)}`;
+    document.getElementById('patronExpiry').textContent = patron.expiry_date || 'N/A';
+    
+    // Update status badge
+    const statusSpan = document.getElementById('patronStatus');
+    if (!patron.has_card) {
+        statusSpan.textContent = 'No Card';
+        statusSpan.className = 'status-badge status-no-card';
+    } else if (patron.is_expired) {
+        statusSpan.textContent = 'Expired';
+        statusSpan.className = 'status-badge status-expired';
+    } else {
+        statusSpan.textContent = 'Active';
+        statusSpan.className = 'status-badge status-active';
+    }
+    
+    // Enable book search if patron is valid
+    const bookSearch = document.getElementById('bookSearch');
+    const addBtn = document.getElementById('addBookBtn');
+    
+    if (patron.has_card && !patron.is_expired && patron.remaining_limit > 0) {
+        bookSearch.disabled = false;
+        addBtn.disabled = false;
+        bookSearch.focus();
+    } else {
+        bookSearch.disabled = true;
+        addBtn.disabled = true;
+        if (!patron.has_card) {
+            alert('This patron does not have a library card. Please issue a card first.');
+        } else if (patron.is_expired) {
+            alert('This patron\'s library card has expired. Please renew the card first.');
+        } else if (patron.remaining_limit <= 0) {
+            alert('This patron has reached their borrowing limit.');
+        }
+    }
+    
+    // Hide search results
+    document.getElementById('searchResults').classList.add('hidden');
+    document.getElementById('patronSearch').value = patron.full_name;
+}
+
+// Book search with Enter key
+document.getElementById('bookSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        addBook();
+    }
+});
+
+function addBook() {
+    const barcode = document.getElementById('bookSearch').value.trim();
+    
+    if (!barcode) {
+        alert('Please enter or scan a barcode');
+        return;
+    }
+    
+    if (!selectedPatron) {
+        alert('Please select a patron first');
+        return;
+    }
+    
+    // Check if already added
+    if (books.some(book => book.barcode === barcode)) {
+        alert('This book is already in the list');
+        document.getElementById('bookSearch').value = '';
+        document.getElementById('bookSearch').focus();
+        return;
+    }
+    
+    // Show loading state
+    const addBtn = document.getElementById('addBookBtn');
+    const originalText = addBtn.innerHTML;
+    addBtn.innerHTML = '<span class="loading"></span> Validating...';
+    addBtn.disabled = true;
+    
+    // Validate barcode
+    fetch(`/admin/api/barcode/validate/${encodeURIComponent(barcode)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                books.push({
+                    barcode: barcode,
+                    title: data.book.title,
+                    author: data.book.author,
+                    book_id: data.book.id,
+                    copy_id: data.copy_id
+                });
+                renderBooks();
+                document.getElementById('bookSearch').value = '';
+                document.getElementById('bookSearch').focus();
+                
+                // Update remaining limit display
+                const remaining = selectedPatron.remaining_limit - books.length;
+                document.getElementById('patronRemainingLimit').textContent = remaining;
+                
+                // Disable checkout if limit reached
+                if (remaining === 0) {
+                    document.getElementById('bookSearch').disabled = true;
+                    document.getElementById('addBookBtn').disabled = true;
+                    alert('Borrowing limit reached. Please process checkout.');
+                }
+            } else {
+                alert(data.message || 'Invalid barcode');
+                document.getElementById('bookSearch').value = '';
+                document.getElementById('bookSearch').focus();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error validating barcode. Please try again.');
+        })
+        .finally(() => {
+            addBtn.innerHTML = originalText;
+            addBtn.disabled = false;
+        });
+}
+
+function renderBooks() {
+    const container = document.getElementById('booksList');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    
+    if (books.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-book-open text-4xl mb-2 block"></i>
+                <p>No books added yet. Scan barcodes above.</p>
+            </div>
+        `;
+        checkoutBtn.disabled = true;
+        return;
+    }
+    
+    let html = '<div class="space-y-2">';
+    books.forEach((book, index) => {
+        html += `
+            <div class="book-item">
+                <div>
+                    <p class="font-medium text-gray-800">${escapeHtml(book.title)}</p>
+                    <p class="text-sm text-gray-600">by ${escapeHtml(book.author)}</p>
+                    <p class="text-xs text-gray-500 font-mono">${escapeHtml(book.barcode)}</p>
+                </div>
+                <button onclick="removeBook(${index})" class="text-red-600 hover:text-red-800 p-2">
+                    <i class="fas fa-times-circle text-xl"></i>
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    container.innerHTML = html;
+    checkoutBtn.disabled = false;
+}
+
+function removeBook(index) {
+    books.splice(index, 1);
+    renderBooks();
+    
+    // Update remaining limit display
+    const remaining = selectedPatron.remaining_limit - books.length;
+    document.getElementById('patronRemainingLimit').textContent = remaining;
+    
+    // Re-enable book search if limit is no longer reached
+    if (remaining > 0) {
+        document.getElementById('bookSearch').disabled = false;
+        document.getElementById('addBookBtn').disabled = false;
+        document.getElementById('bookSearch').focus();
+    }
+}
+
+function completeCheckout() {
+    if (!selectedPatron) {
+        alert('Please select a patron');
+        return;
+    }
+    
+    if (books.length === 0) {
+        alert('Please add at least one book');
+        return;
+    }
+    
+    const borrowDays = parseInt(document.getElementById('loanPeriod').value);
+    
+    if (!confirm(`Checkout ${books.length} book(s) for ${borrowDays} days to ${selectedPatron.full_name}?`)) {
+        return;
+    }
+    
+    // Show loading state
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const originalText = checkoutBtn.innerHTML;
+    checkoutBtn.innerHTML = '<span class="loading"></span> Processing...';
+    checkoutBtn.disabled = true;
+    
+    const data = {
+        patron_id: selectedPatron.id,
+        barcodes: books.map(book => book.barcode),
+        borrow_days: borrowDays
+    };
+    
+    fetch('/admin/api/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let message = `✅ Successfully checked out ${data.borrowed_count} book(s)!\n\n`;
+            data.borrowed_books.forEach(book => {
+                message += `📖 ${book.title}\n   Due: ${book.due_date}\n\n`;
+            });
+            if (data.failed_books && data.failed_books.length > 0) {
+                message += `\n❌ Failed to checkout:\n`;
+                data.failed_books.forEach(book => {
+                    message += `   ${book.barcode}: ${book.reason}\n`;
+                });
+            }
+            alert(message);
+            
+            // Redirect to circulation page
+            window.location.href = "{{ url_for('admin.circulation') }}";
+        } else {
+            alert(data.message || 'Error processing checkout');
+            checkoutBtn.innerHTML = originalText;
+            checkoutBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error processing checkout. Please try again.');
+        checkoutBtn.innerHTML = originalText;
+        checkoutBtn.disabled = false;
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Initialize due date display
+updateDueDate();
+</script>
+{% endblock %}

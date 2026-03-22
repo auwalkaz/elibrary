@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .checkin-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .barcode-scanner {
+        background: linear-gradient(135deg, #1a3c1a, #2d5a2d);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .barcode-input {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        font-size: 1.2rem;
+        color: white;
+        width: 100%;
+        max-width: 400px;
+        margin: 1rem auto;
+    }
+    
+    .barcode-input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .barcode-input:focus {
+        outline: none;
+        border-color: white;
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .book-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        border-left: 4px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .book-card.checked-in {
+        border-left-color: #10b981;
+        background: #f0fdf4;
+    }
+    
+    .book-card.pending {
+        border-left-color: #f59e0b;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.8; }
+        100% { opacity: 1; }
+    }
+    
+    .patron-info {
+        background: #f3f4f6;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .fine-badge {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .checkin-btn {
+        background: #10b981;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+    
+    .checkin-btn:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .success-message {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .success-message i {
+        font-size: 2rem;
+    }
+    
+    .recent-checkins {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .recent-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkin-container py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-3">📥 Check-in Books</h1>
+        <p class="text-white/80">Scan book barcodes to check them back in</p>
+    </div>
+
+    <!-- Success Message (shown after successful checkin) -->
+    <div id="success-message" class="success-message hidden">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <h3 class="font-bold text-lg" id="success-title">Book Checked In!</h3>
+            <p id="success-message-text">The book has been returned successfully.</p>
+        </div>
+    </div>
+
+    <!-- Barcode Scanner Section -->
+    <div class="barcode-scanner">
+        <i class="fas fa-qrcode text-5xl mb-4 opacity-50"></i>
+        <h2 class="text-2xl font-bold mb-2">Scan Book Barcode</h2>
+        <p class="text-white/80 mb-4">Scan the book barcode to check in</p>
+        <input type="text" id="barcode-input" class="barcode-input text-center" placeholder="Scan or enter barcode" autofocus>
+        <div class="mt-4 text-sm text-white/60">
+            <i class="fas fa-info-circle mr-1"></i>
+            Last scanned: <span id="last-scanned">None</span>
+        </div>
+    </div>
+
+    <!-- Scanned Book Info -->
+    <div id="book-info" class="hidden">
+        <!-- Populated by JavaScript -->
+    </div>
+
+    <!-- Recent Check-ins -->
+    <div class="recent-checkins">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-history text-green-700 mr-2"></i>
+            Recent Check-ins
+        </h3>
+        <div id="recent-list" class="space-y-2">
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-book-open text-3xl mb-2 text-gray-300"></i>
+                <p>No recent check-ins</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let recentCheckins = [];
+
+document.getElementById('barcode-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const barcode = this.value.trim();
+        if (barcode) {
+            processCheckin(barcode);
+            this.value = '';
+        }
+    }
+});
+
+function processCheckin(barcode) {
+    document.getElementById('last-scanned').textContent = barcode;
+    
+    // Show loading state
+    const bookInfo = document.getElementById('book-info');
+    bookInfo.classList.remove('hidden');
+    bookInfo.innerHTML = `
+        <div class="book-card pending">
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin text-3xl text-blue-600 mb-2"></i>
+                <p class="text-gray-600">Processing barcode: ${barcode}...</p>
+            </div>
+        </div>
+    `;
+    
+    fetch('/admin/checkin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ barcode: barcode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess(data);
+            addToRecent(data);
+            updateBookInfo(data);
+        } else {
+            showError(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error processing checkin');
+    });
+}
+
+function showSuccess(data) {
+    const successMsg = document.getElementById('success-message');
+    successMsg.classList.remove('hidden');
+    document.getElementById('success-title').textContent = '✅ Book Checked In!';
+    document.getElementById('success-message-text').innerHTML = `
+        <strong>${data.book_title}</strong> has been returned.<br>
+        Patron: ${data.patron_name}<br>
+        Due date: ${data.due_date}<br>
+        Returned: ${data.return_date}
+        ${data.fine > 0 ? `<br><span class="font-bold text-red-700">Fine: ₦${data.fine}</span>` : ''}
+    `;
+    
+    // Hide success message after 5 seconds
+    setTimeout(() => {
+        successMsg.classList.add('hidden');
+    }, 5000);
+}
+
+function showError(message) {
+    const bookInfo = document.getElementById('book-info');
+    bookInfo.innerHTML = `
+        <div class="book-card" style="border-left-color: #ef4444;">
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-circle text-4xl text-red-600 mb-2"></i>
+                <h3 class="font-bold text-red-600 text-lg">Check-in Failed</h3>
+                <p class="text-gray-600">${message}</p>
+                <button onclick="clearBookInfo()" class="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function updateBookInfo(data) {
+    const bookInfo = document.getElementById('book-info');
+    bookInfo.innerHTML = `
+        <div class="book-card checked-in">
+            <div class="flex items-start gap-4">
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-900 text-lg">${data.book_title}</h3>
+                    <p class="text-gray-600">Checked in by: ${data.patron_name}</p>
+                    <div class="patron-info">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500">Due Date</span>
+                                <p class="font-semibold">${data.due_date}</p>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Return Date</span>
+                                <p class="font-semibold">${data.return_date}</p>
+                            </div>
+                        </div>
+                        ${data.fine > 0 ? `
+                            <div class="mt-3 flex justify-between items-center">
+                                <span class="text-gray-700">Fine Amount:</span>
+                                <span class="fine-badge">₦${data.fine}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${data.has_reservation ? `
+                        <div class="mt-3 bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                            <p class="text-sm text-yellow-700">
+                                <i class="fas fa-clock mr-1"></i>
+                                This book has a reservation - marking as reserved
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+            <button onclick="clearBookInfo()" class="mt-4 w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                Scan Next Book
+            </button>
+        </div>
+    `;
+}
+
+function addToRecent(data) {
+    recentCheckins.unshift({
+        title: data.book_title,
+        patron: data.patron_name,
+        time: new Date().toLocaleTimeString(),
+        fine: data.fine
+    });
+    
+    if (recentCheckins.length > 5) {
+        recentCheckins.pop();
+    }
+    
+    const recentList = document.getElementById('recent-list');
+    recentList.innerHTML = recentCheckins.map(item => `
+        <div class="recent-item">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-book text-green-600"></i>
+                <div>
+                    <p class="font-medium text-gray-900">${item.title}</p>
+                    <p class="text-xs text-gray-500">by ${item.patron} · ${item.time}</p>
+                </div>
+            </div>
+            ${item.fine > 0 ? `<span class="fine-badge text-xs">₦${item.fine}</span>` : ''}
+        </div>
+    `).join('');
+}
+
+function clearBookInfo() {
+    document.getElementById('book-info').classList.add('hidden');
+    document.getElementById('barcode-input').focus();
+}
+
+// Focus barcode input on page load
+document.getElementById('barcode-input').focus();
+</script>
+{% endblock %}

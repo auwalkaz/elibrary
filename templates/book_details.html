@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ book.title }} - Nigerian Army e-Library{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="md:flex">
+            <!-- Book Cover -->
+            <div class="md:w-1/3 p-6">
+                {% if book.cover_image %}
+                <img src="{{ url_for('admin.uploaded_file', filename=book.cover_image) }}" 
+                     alt="{{ book.title }}" 
+                     class="w-full rounded-lg shadow-md">
+                {% else %}
+                <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-book text-gray-400 text-6xl"></i>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Book Details -->
+            <div class="md:w-2/3 p-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ book.title }}</h1>
+                <p class="text-xl text-gray-600 mb-4">by {{ book.author }}</p>
+                
+                {% if book.category %}
+                <p class="text-sm text-gray-500 mb-2">
+                    <i class="fas fa-folder-open mr-1"></i>Category: {{ book.category }}
+                </p>
+                {% endif %}
+                
+                {% if book.publisher %}
+                <p class="text-sm text-gray-500 mb-2">
+                    <i class="fas fa-building mr-1"></i>Publisher: {{ book.publisher }}
+                </p>
+                {% endif %}
+                
+                {% if book.published_year %}
+                <p class="text-sm text-gray-500 mb-4">
+                    <i class="fas fa-calendar-alt mr-1"></i>Published: {{ book.published_year }}
+                </p>
+                {% endif %}
+                
+                <div class="prose max-w-none mb-6">
+                    <h3 class="text-lg font-semibold">Description</h3>
+                    <p>{{ book.description or 'No description available.' }}</p>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-4">
+                    {% if book.has_digital %}
+                    <a href="{{ url_for('books.read', book_id=book.id) }}" 
+                       class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-book-open mr-2"></i>Read Online
+                    </a>
+                    
+                    <a href="{{ url_for('books.download', filename=book.filename) }}" 
+                       class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-download mr-2"></i>Download
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Borrow Button -->
+                    {% if book.has_physical and available_copies > 0 %}
+                    <a href="{{ url_for('books.borrow', book_id=book.id) }}" 
+                       class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-hand-holding-heart mr-2"></i>Borrow Physical Copy
+                        <span class="ml-1 text-xs">({{ available_copies }} available)</span>
+                    </a>
+                    {% elif book.has_physical and available_copies == 0 %}
+                    <button disabled 
+                            class="bg-gray-400 text-white px-6 py-2 rounded-lg cursor-not-allowed">
+                        <i class="fas fa-ban mr-2"></i>No Copies Available
+                    </button>
+                    {% endif %}
+                    
+                    {% if session.user_id %}
+                    <button onclick="toggleWishlist({{ book.id }})" 
+                            class="{% if in_wishlist %}bg-red-600 hover:bg-red-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white px-6 py-2 rounded-lg transition">
+                        <i class="{% if in_wishlist %}fas fa-heart{% else %}far fa-heart{% endif %} mr-2"></i>
+                        {% if in_wishlist %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reviews Section -->
+        {% if reviews %}
+        <div class="border-t border-gray-200 p-6">
+            <h2 class="text-2xl font-bold mb-4">Reviews</h2>
+            {% for review in reviews %}
+            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <span class="font-semibold">{{ review.user.username }}</span>
+                        <span class="text-yellow-400 ml-2">
+                            {% for i in range(review.rating) %}★{% endfor %}
+                            {% for i in range(5 - review.rating) %}☆{% endfor %}
+                        </span>
+                    </div>
+                    <span class="text-gray-500 text-sm">{{ review.created_at.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <p>{{ review.comment }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleWishlist(bookId) {
+    fetch(`/api/wishlist/toggle/${bookId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

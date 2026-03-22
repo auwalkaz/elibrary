@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Patrons with Expiring Cards</h1>
+    
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-sm font-medium text-gray-500 mb-1">Total Expiring</h3>
+            <p class="text-3xl font-bold text-gray-900">{{ expiring_cards|length }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-sm font-medium text-gray-500 mb-1">Critical (< 7 days)</h3>
+            <p class="text-3xl font-bold text-red-600">
+                {{ expiring_cards|selectattr('days_left', '<', 7)|list|length }}
+            </p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-sm font-medium text-gray-500 mb-1">Warning (7-14 days)</h3>
+            <p class="text-3xl font-bold text-yellow-600">
+                {{ expiring_cards|selectattr('days_left', '>=', 7)|selectattr('days_left', '<', 14)|list|length }}
+            </p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-sm font-medium text-gray-500 mb-1">Notice (14-30 days)</h3>
+            <p class="text-3xl font-bold text-green-600">
+                {{ expiring_cards|selectattr('days_left', '>=', 14)|list|length }}
+            </p>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patron</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card Number</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Days Left</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for item in expiring_cards %}
+                <tr data-user-id="{{ item.user.id }}" data-card-id="{{ item.card.id }}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span class="text-blue-600 font-medium">
+                                    {{ (item.user.full_name or item.user.username)[:2].upper() }}
+                                </span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ item.user.full_name or item.user.username }}
+                                </div>
+                                <div class="text-sm text-gray-500">{{ item.user.email }}</div>
+                                {% if item.user.service_number %}
+                                <div class="text-xs text-gray-400">Service #: {{ item.user.service_number }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap font-mono text-sm">{{ item.card.card_number }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ item.expiry_date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if item.days_left < 7 %}bg-red-100 text-red-800
+                            {% elif item.days_left < 14 %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ item.days_left }} days
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if item.card.is_active %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ 'Active' if item.card.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-3">
+                            <a href="{{ url_for('admin.view_user', user_id=item.user.id) }}" 
+                               class="text-blue-600 hover:text-blue-900 flex items-center">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                View
+                            </a>
+                            <button onclick="renewCard(this)" 
+                                    data-user-id="{{ item.user.id }}"
+                                    data-days="{{ item.days_left }}"
+                                    class="text-green-600 hover:text-green-900 flex items-center">
+                                <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Renew
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="mt-4 text-lg">No expiring cards found</p>
+                        <p class="text-sm">All library cards are valid for more than 30 days.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Bulk Renew Option -->
+    {% if expiring_cards|length > 0 %}
+    <div class="mt-6 flex justify-end">
+        <button onclick="bulkRenew()" 
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-medium flex items-center">
+            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Renew All Cards
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function renewCard(button) {
+    const userId = button.getAttribute('data-user-id');
+    const daysLeft = button.getAttribute('data-days');
+    
+    const days = prompt('Enter number of days to renew (default 365):', '365');
+    if (days === null) return; // User cancelled
+    
+    const daysNum = parseInt(days);
+    if (isNaN(daysNum) || daysNum <= 0) {
+        alert('Please enter a valid number of days');
+        return;
+    }
+    
+    if (confirm(`Renew this patron's library card for ${daysNum} days?`)) {
+        // Show loading state
+        button.disabled = true;
+        button.innerHTML = '<span class="flex items-center"><svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...</span>';
+        
+        fetch(`/admin/patron/${userId}/renew-card`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ days: daysNum })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the row
+                const row = button.closest('tr');
+                const daysCell = row.querySelector('td:nth-child(4) span');
+                daysCell.textContent = data.days_until_expiry + ' days';
+                daysCell.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
+                
+                // Update expiry date
+                const expiryCell = row.querySelector('td:nth-child(3)');
+                expiryCell.textContent = data.new_expiry;
+                
+                // Update button data
+                button.setAttribute('data-days', data.days_until_expiry);
+                
+                // Show success message
+                showNotification(data.message, 'success');
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            // Restore button
+            button.disabled = false;
+            button.innerHTML = '<svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Renew';
+        });
+    }
+}
+
+function bulkRenew() {
+    const days = prompt('Enter number of days to renew all cards (default 365):', '365');
+    if (days === null) return;
+    
+    const daysNum = parseInt(days);
+    if (isNaN(daysNum) || daysNum <= 0) {
+        alert('Please enter a valid number of days');
+        return;
+    }
+    
+    const rows = document.querySelectorAll('tbody tr');
+    const userIds = Array.from(rows).map(row => row.getAttribute('data-user-id')).filter(id => id);
+    
+    if (userIds.length === 0) {
+        alert('No users to renew');
+        return;
+    }
+    
+    if (confirm(`Renew ${userIds.length} library cards for ${daysNum} days?`)) {
+        // Show loading
+        const button = event.target;
+        button.disabled = true;
+        button.innerHTML = '<span class="flex items-center"><svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">...</svg>Processing...</span>';
+        
+        let completed = 0;
+        let succeeded = 0;
+        
+        userIds.forEach(userId => {
+            fetch(`/admin/patron/${userId}/renew-card`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ days: daysNum })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    succeeded++;
+                    // Update the corresponding row
+                    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                    if (row) {
+                        const daysCell = row.querySelector('td:nth-child(4) span');
+                        daysCell.textContent = data.days_until_expiry + ' days';
+                        daysCell.className = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800';
+                        
+                        const expiryCell = row.querySelector('td:nth-child(3)');
+                        expiryCell.textContent = data.new_expiry;
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                completed++;
+                if (completed === userIds.length) {
+                    showNotification(`Renewed ${succeeded} of ${userIds.length} cards`, 'success');
+                    button.disabled = false;
+                    button.innerHTML = '<svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Renew All Cards';
+                }
+            });
+        });
+    }
+}
+
+// Notification helper
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 
+        'bg-blue-500'
+    } text-white`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Auto-refresh critical notifications
+document.addEventListener('DOMContentLoaded', function() {
+    const criticalRows = document.querySelectorAll('tr td:nth-child(4) span.bg-red-100');
+    if (criticalRows.length > 0) {
+        showNotification(`${criticalRows.length} cards expiring in less than 7 days!`, 'error');
+    }
+});
+</script>
+{% endblock %}

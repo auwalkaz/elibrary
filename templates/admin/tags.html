@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 1rem;
+        min-height: 300px;
+    }
+    
+    .tag-item {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    
+    .tag-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .tag-item.trending {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+    
+    .tag-size-1 { font-size: 0.8rem; }
+    .tag-size-2 { font-size: 0.9rem; }
+    .tag-size-3 { font-size: 1rem; }
+    .tag-size-4 { font-size: 1.1rem; }
+    .tag-size-5 { font-size: 1.2rem; }
+    .tag-size-6 { font-size: 1.3rem; }
+    
+    .tag-type-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+    
+    .type-general { background: #e5e7eb; color: #374151; }
+    .type-subject { background: #dbeafe; color: #1e40af; }
+    .type-genre { background: #fef3c7; color: #92400e; }
+    .type-format { background: #dcfce7; color: #166534; }
+    .type-audience { background: #fae8ff; color: #6b21a8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">🏷️ Tag Management</h1>
+        <button onclick="openTagModal()" class="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800">
+            <i class="fas fa-plus mr-2"></i>New Tag
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-full">
+                    <i class="fas fa-tags text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Total Tags</p>
+                    <p class="text-2xl font-bold">{{ stats.total }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-full">
+                    <i class="fas fa-fire text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Trending</p>
+                    <p class="text-2xl font-bold">{{ stats.trending }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-yellow-100 rounded-full">
+                    <i class="fas fa-star text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Featured</p>
+                    <p class="text-2xl font-bold">{{ stats.featured }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-full">
+                    <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Total Uses</p>
+                    <p class="text-2xl font-bold">{{ stats.total_uses }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="p-3 bg-red-100 rounded-full">
+                    <i class="fas fa-book text-red-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Avg per Book</p>
+                    <p class="text-2xl font-bold">{{ stats.avg_per_book }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Cloud & Management -->
+    <div class="grid grid-cols-3 gap-6">
+        <!-- Tag Cloud (Visual) -->
+        <div class="col-span-2 bg-white rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold">Tag Cloud</h2>
+                <p class="text-sm text-gray-500">Size indicates popularity • Click to edit</p>
+            </div>
+            
+            <div class="tag-cloud" id="tag-cloud">
+                {% for tag in tags %}
+                <span class="tag-item tag-size-{{ tag.size }} {% if tag.trending_score > 10 %}trending{% endif %}"
+                      style="background-color: {{ tag.color|default('#e5e7eb') }}20; 
+                             border-color: {{ tag.color|default('#e5e7eb') }}"
+                      onclick="editTag({{ tag.id }})">
+                    <i class="fas fa-{{ tag.icon|default('tag') }} mr-2" 
+                       style="color: {{ tag.color|default('#6b7280') }}"></i>
+                    {{ tag.name }}
+                    <span class="tag-type-badge type-{{ tag.type|default('general') }}">
+                        {{ tag.type|default('general') }}
+                    </span>
+                    <span class="ml-2 text-xs text-gray-500">({{ tag.usage_count }})</span>
+                    {% if tag.trending_score > 10 %}
+                    <span class="ml-1 text-xs text-orange-500">🔥</span>
+                    {% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Tag List (Tabular) -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold">Tag List</h2>
+                <div class="mt-2">
+                    <input type="text" id="tag-search" placeholder="Search tags..." 
+                           class="form-input w-full">
+                </div>
+            </div>
+            
+            <div class="overflow-y-auto" style="max-height: 500px;">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Tag</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Uses</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-500">Trending</th>
+                            <th class="px-4 py-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tag-list">
+                        {% for tag in tags %}
+                        <tr class="hover:bg-gray-50 border-b" data-tag-name="{{ tag.name|lower }}">
+                            <td class="px-4 py-2">
+                                <div class="flex items-center">
+                                    <i class="fas fa-{{ tag.icon|default('tag') }} mr-2" 
+                                       style="color: {{ tag.color|default('#6b7280') }}"></i>
+                                    {{ tag.name }}
+                                </div>
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="tag-type-badge type-{{ tag.type|default('general') }}">
+                                    {{ tag.type|default('general') }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-center">{{ tag.usage_count }}</td>
+                            <td class="px-4 py-2 text-center">
+                                {% if tag.trending_score > 10 %}
+                                <span class="text-orange-500">🔥 {{ tag.trending_score|round(1) }}</span>
+                                {% else %}
+                                <span class="text-gray-400">{{ tag.trending_score|round(1) }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 text-right">
+                                <button onclick="editTag({{ tag.id }})" 
+                                        class="text-blue-600 hover:text-blue-800 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteTag({{ tag.id }})" 
+                                        class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Tag Types Summary -->
+            <div class="p-4 border-t border-gray-200">
+                <h3 class="font-medium mb-2">Tag Types</h3>
+                <div class="space-y-2">
+                    {% for type in tag_types %}
+                    <div class="flex justify-between text-sm">
+                        <span class="tag-type-badge type-{{ type.type }}">
+                            {{ type.type|capitalize }}
+                        </span>
+                        <span>{{ type.count }} tags</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tag Modal -->
+<div id="tagModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold" id="tagModalTitle">Add New Tag</h3>
+            <button onclick="closeTagModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="tagForm" method="POST" action="{{ url_for('admin.save_tag') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="tag_id" id="tagId">
+            
+            <div class="mb-4">
+                <label class="form-label required">Tag Name</label>
+                <input type="text" name="name" id="tagName" class="form-input" required>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">Description</label>
+                <textarea name="description" id="tagDescription" rows="2" class="form-input"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">Tag Type</label>
+                <select name="type" id="tagType" class="form-input">
+                    <option value="general">General</option>
+                    <option value="subject">Subject</option>
+                    <option value="genre">Genre</option>
+                    <option value="format">Format</option>
+                    <option value="audience">Audience</option>
+                </select>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="form-label">Color</label>
+                    <input type="color" name="color" id="tagColor" class="form-input h-10" value="#6b7280">
+                </div>
+                <div>
+                    <label class="form-label">Icon</label>
+                    <select name="icon" id="tagIcon" class="form-input">
+                        <option value="tag">Default</option>
+                        <option value="book">Book</option>
+                        <option value="star">Star</option>
+                        <option value="heart">Heart</option>
+                        <option value="fire">Fire</option>
+                        <option value="leaf">Leaf</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" name="is_featured" id="tagFeatured" class="mr-2">
+                    <span>Featured Tag</span>
+                </label>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeTagModal()" 
+                        class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800">
+                    Save Tag
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openTagModal() {
+    document.getElementById('tagModalTitle').textContent = 'Add New Tag';
+    document.getElementById('tagForm').reset();
+    document.getElementById('tagId').value = '';
+    document.getElementById('tagModal').classList.remove('hidden');
+}
+
+function editTag(id) {
+    fetch(`/admin/api/tag/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('tagModalTitle').textContent = 'Edit Tag';
+            document.getElementById('tagId').value = data.id;
+            document.getElementById('tagName').value = data.name;
+            document.getElementById('tagDescription').value = data.description || '';
+            document.getElementById('tagType').value = data.type || 'general';
+            document.getElementById('tagColor').value = data.color || '#6b7280';
+            document.getElementById('tagIcon').value = data.icon || 'tag';
+            document.getElementById('tagFeatured').checked = data.is_featured;
+            document.getElementById('tagModal').classList.remove('hidden');
+        });
+}
+
+function closeTagModal() {
+    document.getElementById('tagModal').classList.add('hidden');
+}
+
+function deleteTag(id) {
+    if (confirm('Are you sure you want to delete this tag? It will be removed from all books.')) {
+        fetch(`/admin/api/tag/${id}/delete`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        });
+    }
+}
+
+// Tag search
+document.getElementById('tag-search').addEventListener('input', function(e) {
+    const search = e.target.value.toLowerCase();
+    document.querySelectorAll('#tag-list tr').forEach(row => {
+        const name = row.dataset.tagName;
+        if (name.includes(search)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Dynamic tag size calculation (for visual effect)
+document.querySelectorAll('.tag-item').forEach(tag => {
+    const usage = parseInt(tag.textContent.match(/\((\d+)\)/)[1]);
+    let size = 1;
+    if (usage > 100) size = 6;
+    else if (usage > 50) size = 5;
+    else if (usage > 20) size = 4;
+    else if (usage > 10) size = 3;
+    else if (usage > 5) size = 2;
+    tag.classList.add(`tag-size-${size}`);
+});
+</script>
+{% endblock %}

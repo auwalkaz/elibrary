@@ -1,0 +1,216 @@
+<!-- Login Modal -->
+<div id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+        <div style="background: white; border-radius: 24px; max-width: 450px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+            <!-- Close Button -->
+            <div style="display: flex; justify-content: flex-end; padding: 20px 20px 0 20px;">
+                <button type="button" onclick="closeLoginModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 0 32px 32px 32px;">
+                <div style="text-align: center; margin-bottom: 32px;">
+                    <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <svg style="width: 35px; height: 35px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h2 style="font-size: 28px; font-weight: bold; color: #1f2937; margin-bottom: 8px;">Welcome Back</h2>
+                    <p style="color: #6b7280;">Sign in to your account</p>
+                </div>
+                
+                <div id="modalFlashMessages"></div>
+                
+                <form id="modalLoginForm" method="POST" action="{{ url_for('auth.login_authenticate') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" name="username" required 
+                               style="width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 16px; font-size: 15px; outline: none; transition: all 0.3s;"
+                               placeholder="Email or Username"
+                               id="modalUsername"
+                               onfocus="this.style.borderColor='#667eea'"
+                               onblur="this.style.borderColor='#e5e7eb'">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <input type="password" name="password" id="modalPassword" required 
+                               style="width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 16px; font-size: 15px; outline: none; transition: all 0.3s;"
+                               placeholder="Password"
+                               onfocus="this.style.borderColor='#667eea'"
+                               onblur="this.style.borderColor='#e5e7eb'">
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" name="remember" style="width: 18px; height: 18px; margin-right: 8px; cursor: pointer;">
+                            <span style="font-size: 14px; color: #6b7280;">Remember me</span>
+                        </label>
+                        <a href="{{ url_for('auth.forgot_password') }}" style="font-size: 14px; color: #667eea; text-decoration: none;">Forgot password?</a>
+                    </div>
+                    
+                    <button type="submit" id="modalLoginBtn"
+                            style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        Sign In
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin: 24px 0;">
+                    <div style="position: relative;">
+                        <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e5e7eb;"></div>
+                        <span style="background: white; padding: 0 12px; position: relative; color: #9ca3af; font-size: 14px;">Or</span>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('auth.na_oauth_login') }}" 
+                   id="militaryLoginBtn"
+                   style="display: flex; align-items: center; justify-content: center; width: 100%; background: #1f2937; color: white; padding: 14px; border-radius: 16px; text-decoration: none; font-weight: 600; gap: 10px; transition: all 0.3s;"
+                   onmouseover="this.style.background='#111827'"
+                   onmouseout="this.style.background='#1f2937'">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-1 1v7a1 1 0 001 1h10a1 1 0 001-1V8a1 1 0 00-1-1h-1V6a4 4 0 00-4-4zM7 6a3 3 0 116 0v1H7V6z"></path>
+                    </svg>
+                    Login with Nigerian Army
+                </a>
+                
+                <div style="text-align: center; margin-top: 24px;">
+                    <p style="font-size: 14px; color: #6b7280;">
+                        Don't have an account? 
+                        <a href="{{ url_for('auth.register') }}" style="color: #667eea; text-decoration: none; font-weight: 600;">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Ensure functions are globally available
+(function() {
+    // Define functions on window object
+    window.openLoginModal = function() {
+        console.log('openLoginModal called');
+        var modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            var msgDiv = document.getElementById('modalFlashMessages');
+            if (msgDiv) msgDiv.innerHTML = '';
+            setTimeout(function() {
+                var usernameField = document.getElementById('modalUsername');
+                if (usernameField) usernameField.focus();
+            }, 100);
+        } else {
+            console.error('Modal not found, redirecting to login page');
+            window.location.href = '/auth/login';
+        }
+    };
+    
+    window.closeLoginModal = function() {
+        console.log('closeLoginModal called');
+        var modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+    
+    // Close when clicking outside
+    document.addEventListener('click', function(event) {
+        var modal = document.getElementById('loginModal');
+        if (modal && modal.style.display === 'block') {
+            var modalContent = modal.querySelector('div[style*="background: white"]');
+            if (modalContent && !modalContent.contains(event.target) && !event.target.closest('button') && !event.target.closest('a')) {
+                window.closeLoginModal();
+            }
+        }
+    });
+    
+    // Close with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            window.closeLoginModal();
+        }
+    });
+    
+    // Form submission handler with loading overlay
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('modalLoginForm');
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                var submitBtn = document.getElementById('modalLoginBtn');
+                var msgDiv = document.getElementById('modalFlashMessages');
+                var originalText = submitBtn.innerHTML;
+                
+                // Show loading in the button
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span style="display: inline-block; width: 18px; height: 18px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite;"></span> Signing in...';
+                msgDiv.innerHTML = '';
+                
+                // Show global loading overlay
+                if (typeof window.showLoading === 'function') {
+                    window.showLoading('Signing you in...');
+                }
+                
+                var formData = new FormData(form);
+                
+                try {
+                    var response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    var data = await response.json();
+                    
+                    if (data.success) {
+                        msgDiv.innerHTML = '<div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px; border-radius: 12px; margin-bottom: 16px;">✓ ' + data.message + '</div>';
+                        window.closeLoginModal();
+                        // Show loading for redirect
+                        if (typeof window.showLoading === 'function') {
+                            window.showLoading('Redirecting to dashboard...');
+                        }
+                        setTimeout(function() {
+                            window.location.href = data.redirect;
+                        }, 500);
+                    } else {
+                        msgDiv.innerHTML = '<div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px; border-radius: 12px; margin-bottom: 16px;">✗ ' + data.message + '</div>';
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                        // Hide loading on error
+                        if (typeof window.hideLoading === 'function') {
+                            window.hideLoading();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    msgDiv.innerHTML = '<div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px; border-radius: 12px; margin-bottom: 16px;">✗ Connection error. Please try again.</div>';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    if (typeof window.hideLoading === 'function') {
+                        window.hideLoading();
+                    }
+                }
+            });
+        }
+    });
+    
+    // Add spinner animation style if not exists
+    if (!document.querySelector('#spinner-style')) {
+        var style = document.createElement('style');
+        style.id = 'spinner-style';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    console.log('Login modal script loaded');
+})();
+</script>

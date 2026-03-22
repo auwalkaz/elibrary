@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #ffd700;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: #ffd700;
+        box-shadow: 0 10px 25px rgba(255, 215, 0, 0.2);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon i {
+        font-size: 1.5rem;
+        color: #ffd700;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a1f3a;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ffd700, #fbbf24);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .library-card {
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        border-radius: 1rem;
+        padding: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #ffd700;
+    }
+    
+    .library-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 70%);
+    }
+    
+    .card-number {
+        font-size: 1.5rem;
+        font-family: monospace;
+        letter-spacing: 2px;
+        margin: 1rem 0;
+        background: rgba(255,255,255,0.1);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border: 1px solid #ffd700;
+    }
+    
+    .card-detail {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .card-detail span:first-child {
+        color: #ffd700;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 2px solid #e5e7eb;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-item:hover {
+        background: #f9fafb;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .activity-icon i {
+        color: #ffd700;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        color: #0a1f3a;
+    }
+    
+    .activity-time {
+        font-size: 0.8rem;
+        color: #9ca3af;
+    }
+    
+    .fine-badge {
+        background: #ef4444;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0a1f3a;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-title i {
+        color: #ffd700;
+    }
+    
+    .download-limit-box {
+        background: #f3f4f6;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    /* Empty state styling */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #9ca3af;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+    
+    /* Welcome section */
+    .welcome-section {
+        margin-bottom: 2rem;
+    }
+    
+    .member-since {
+        color: rgba(255,255,255,0.8);
+        font-size: 1rem;
+    }
+    
+    /* Fine badge */
+    .fine-badge {
+        background: #ef4444;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold text-white mb-2">Welcome, {{ user.full_name or user.username }}!</h1>
+        <p class="text-white/80">Member since {{ user.created_at.strftime('%B %d, %Y') }}</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-book-reader"></i>
+            </div>
+            <div class="stat-value">{{ reading_history|default(0) }}</div>
+            <div class="stat-label">Books Read</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-download"></i>
+            </div>
+            <div class="stat-value">{{ total_downloads|default(0) }}</div>
+            <div class="stat-label">Downloads</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-heart"></i>
+            </div>
+            <div class="stat-value">{{ wishlist_count|default(0) }}</div>
+            <div class="stat-label">Wishlist</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-value">{{ reviews_count|default(0) }}</div>
+            <div class="stat-label">Reviews</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Library Card & Download Limits -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Library Card -->
+            {% if user.library_card %}
+            <div class="library-card">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-id-card mr-2 text-yellow-400"></i>
+                    Library Card
+                </h3>
+                <div class="card-number">
+                    {{ user.library_card.card_number }}
+                </div>
+                <div class="card-detail">
+                    <span>Issued Date:</span>
+                    <span>{{ user.library_card.issued_date.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="card-detail">
+                    <span>Expiry Date:</span>
+                    <span>{{ user.library_card.expiry_date.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="card-detail">
+                    <span>Status:</span>
+                    <span class="{% if user.library_card.is_active %}text-green-400{% else %}text-red-400{% endif %}">
+                        {{ 'Active' if user.library_card.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                {% if user.library_card.barcode %}
+                <div class="mt-4 text-center">
+                    <img src="https://barcode.tec-it.com/barcode.ashx?data={{ user.library_card.card_number }}&code=Code128&dpi=96" 
+                         alt="Barcode" class="mx-auto bg-white p-2 rounded">
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-yellow-400">
+                <i class="fas fa-id-card text-4xl text-yellow-400 mb-3"></i>
+                <p class="text-gray-600">No library card assigned yet.</p>
+            </div>
+            {% endif %}
+            
+            <!-- Download Limits -->
+            <div class="bg-white rounded-xl p-6 border-2 border-yellow-400">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-download text-yellow-400 mr-2"></i>
+                    Download Limits
+                </h3>
+                
+                {% if download_stats %}
+                    {% set today_percent = (download_stats.today / download_stats.max_per_day|default(5) * 100)|round %}
+                    {% set week_percent = (download_stats.this_week / download_stats.max_per_week|default(20) * 100)|round %}
+                    {% set month_percent = (download_stats.this_month / download_stats.max_per_month|default(50) * 100)|round %}
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Today</span>
+                                <span class="font-semibold">{{ download_stats.today }}/{{ download_stats.max_per_day|default(5) }}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ today_percent }}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">This Week</span>
+                                <span class="font-semibold">{{ download_stats.this_week }}/{{ download_stats.max_per_week|default(20) }}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ week_percent }}%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">This Month</span>
+                                <span class="font-semibold">{{ download_stats.this_month }}/{{ download_stats.max_per_month|default(50) }}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {{ month_percent }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-info-circle text-yellow-400 mr-1"></i>
+                            Remaining today: <span class="font-semibold">{{ download_stats.max_per_day|default(5) - download_stats.today }}</span> downloads
+                        </p>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-center py-4">No download data available</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Right Column - Activity & Borrowings -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Current Borrowings -->
+            <div class="recent-activity">
+                <h3 class="section-title">
+                    <i class="fas fa-book-open"></i>
+                    Current Borrowings
+                </h3>
+                
+                {% if current_borrowings %}
+                <div class="space-y-3">
+                    {% for borrow in current_borrowings %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">{{ borrow.book.title }}</div>
+                            <div class="flex items-center gap-4 mt-1">
+                                <span class="text-xs text-gray-500">
+                                    <i class="far fa-calendar mr-1"></i> Due: {{ borrow.due_date.strftime('%d %b %Y') }}
+                                </span>
+                                {% if borrow.due_date < now %}
+                                <span class="fine-badge">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Fine: ₦{{ borrow.calculate_fine() }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <form action="{{ url_for('borrow.return_book', borrow_id=borrow.id) }}" method="POST" class="inline">
+                            <button type="submit" class="text-sm bg-yellow-400 text-blue-900 px-3 py-1 rounded-full hover:bg-yellow-300 transition">
+                                Return
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <p>No books currently borrowed</p>
+                    <a href="{{ url_for('books.home') }}" class="inline-block mt-3 text-sm text-yellow-400 hover:text-yellow-300">
+                        Browse Library →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="recent-activity">
+                <h3 class="section-title">
+                    <i class="fas fa-history"></i>
+                    Recent Activity
+                </h3>
+                
+                {% if recent_activity %}
+                <div class="space-y-3">
+                    {% for activity in recent_activity %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-{{ activity.icon }}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">{{ activity.description }}</div>
+                            <div class="activity-time">{{ activity.time }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>No recent activity</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Wishlist Preview -->
+            <div class="recent-activity">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="section-title mb-0">
+                        <i class="fas fa-heart"></i>
+                        Wishlist
+                    </h3>
+                    {% if wishlist_items %}
+                    <a href="{{ url_for('books.view_wishlist') }}" class="text-yellow-400 hover:text-yellow-300 text-sm">
+                        View All <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                {% if wishlist_items %}
+                <div class="grid grid-cols-2 gap-3">
+                    {% for item in wishlist_items[:4] %}
+                    <a href="{{ url_for('books.read', book_id=item.book.id) }}" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="font-medium text-gray-800 truncate">{{ item.book.title }}</div>
+                        <div class="text-xs text-gray-500">{{ item.book.author }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-heart"></i>
+                    <p>Your wishlist is empty</p>
+                    <a href="{{ url_for('books.home') }}" class="inline-block mt-3 text-sm text-yellow-400 hover:text-yellow-300">
+                        Browse Books →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

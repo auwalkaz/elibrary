@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .scanner-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .scanner-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .scanner-input {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .scanner-input input {
+        flex: 1;
+        padding: 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 1.1rem;
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+    
+    .scanner-input input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .scanner-input button {
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        padding: 0 2rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .scanner-input button:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+    }
+    
+    .result-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        display: none;
+    }
+    
+    .result-card.patron {
+        border-left: 4px solid #48bb78;
+    }
+    
+    .result-card.book {
+        border-left: 4px solid #4299e1;
+    }
+    
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .result-badge {
+        padding: 0.25rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .badge-patron {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    
+    .badge-book {
+        background: #bee3f8;
+        color: #2c5282;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .action-btn {
+        flex: 1;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-checkout {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-checkin {
+        background: #4299e1;
+        color: white;
+    }
+    
+    .btn-view {
+        background: #ed8936;
+        color: white;
+    }
+    
+    .history-section {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .history-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    
+    .history-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+    
+    .icon-checkin {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    
+    .history-details {
+        flex: 1;
+    }
+    
+    .history-time {
+        font-size: 0.8rem;
+        color: #a0aec0;
+    }
+    
+    .beep-animation {
+        animation: beep 0.3s ease;
+    }
+    
+    @keyframes beep {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); background: #faf089; }
+        100% { transform: scale(1); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scanner-container py-8">
+    <div class="scanner-header">
+        <i class="fas fa-qrcode text-5xl mb-4"></i>
+        <h1 class="text-3xl font-bold">Barcode Scanner</h1>
+        <p class="text-white/80">Scan patron cards or book barcodes for quick operations</p>
+    </div>
+    
+    <!-- Scanner Input -->
+    <div class="scanner-input">
+        <input type="text" id="barcode-input" placeholder="Scan barcode here..." autofocus>
+        <button onclick="processBarcode()">
+            <i class="fas fa-search mr-2"></i>Lookup
+        </button>
+    </div>
+    
+    <!-- Result Display -->
+    <div id="result-card" class="result-card">
+        <div class="result-header">
+            <h3 id="result-title" class="text-xl font-semibold"></h3>
+            <span id="result-badge" class="result-badge"></span>
+        </div>
+        <div id="result-content"></div>
+        <div id="action-buttons" class="action-buttons"></div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        <button onclick="quickAction('checkout')" class="bg-green-500 text-white p-4 rounded-lg hover:bg-green-600">
+            <i class="fas fa-sign-out-alt text-2xl mb-2"></i>
+            <p>Quick Checkout</p>
+        </button>
+        <button onclick="quickAction('checkin')" class="bg-blue-500 text-white p-4 rounded-lg hover:bg-blue-600">
+            <i class="fas fa-sign-in-alt text-2xl mb-2"></i>
+            <p>Quick Checkin</p>
+        </button>
+        <button onclick="quickAction('renew')" class="bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600">
+            <i class="fas fa-sync-alt text-2xl mb-2"></i>
+            <p>Quick Renew</p>
+        </button>
+    </div>
+    
+    <!-- Recent Scans History -->
+    <div class="history-section">
+        <h3 class="text-lg font-semibold mb-4 flex items-center">
+            <i class="fas fa-history mr-2 text-blue-500"></i>
+            Recent Activity
+        </h3>
+        <div id="history-list">
+            <div class="text-center text-gray-500 py-4">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentResult = null;
+let audio = new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4Gcm0UYQF2cg4m9nUAEAKgBLAAwApAAZQBaAA=');
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadHistory();
+    document.getElementById('barcode-input').focus();
+    
+    document.getElementById('barcode-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            processBarcode();
+        }
+    });
+});
+
+function playBeep() {
+    audio.play().catch(e => console.log('Audio play failed:', e));
+}
+
+function processBarcode() {
+    const barcode = document.getElementById('barcode-input').value.trim();
+    
+    if (!barcode) {
+        alert('Please enter or scan a barcode');
+        return;
+    }
+    
+    // Add beep animation
+    document.querySelector('.scanner-input').classList.add('beep-animation');
+    setTimeout(() => {
+        document.querySelector('.scanner-input').classList.remove('beep-animation');
+    }, 300);
+    
+    playBeep();
+    
+    fetch('/admin/api/barcode/lookup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ barcode: barcode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayResult(data);
+        } else {
+            alert('No patron or book found with this barcode');
+        }
+        document.getElementById('barcode-input').value = '';
+        document.getElementById('barcode-input').focus();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Server error occurred');
+    });
+}
+
+function displayResult(data) {
+    const resultCard = document.getElementById('result-card');
+    const resultTitle = document.getElementById('result-title');
+    const resultBadge = document.getElementById('result-badge');
+    const resultContent = document.getElementById('result-content');
+    const actionButtons = document.getElementById('action-buttons');
+    
+    resultCard.style.display = 'block';
+    resultCard.className = 'result-card ' + data.type;
+    
+    if (data.type === 'patron') {
+        const patron = data.data;
+        resultTitle.textContent = patron.name;
+        resultBadge.textContent = 'PATRON';
+        resultBadge.className = 'result-badge badge-patron';
+        
+        resultContent.innerHTML = `
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600 text-sm">Email</p>
+                    <p class="font-medium">${patron.email}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Card Status</p>
+                    <p class="font-medium ${patron.is_expired ? 'text-red-600' : 'text-green-600'}">
+                        ${patron.card_status}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Card Number</p>
+                    <p class="font-mono">${patron.card_number}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Expiry</p>
+                    <p class="font-medium ${patron.days_until_expiry < 30 ? 'text-orange-600' : ''}">
+                        ${patron.days_until_expiry} days left
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        actionButtons.innerHTML = `
+            <button onclick="location.href='/admin/patron/${patron.id}/view'" class="action-btn btn-view">
+                <i class="fas fa-eye mr-2"></i>View Patron
+            </button>
+            <button onclick="startCheckout(${patron.id})" class="action-btn btn-checkout">
+                <i class="fas fa-sign-out-alt mr-2"></i>Checkout
+            </button>
+        `;
+        
+        currentResult = { type: 'patron', id: patron.id };
+        
+    } else if (data.type === 'book') {
+        const book = data.data;
+        resultTitle.textContent = book.title;
+        resultBadge.textContent = 'BOOK';
+        resultBadge.className = 'result-badge badge-book';
+        
+        const availability = book.available ? 
+            '<span class="text-green-600">Available</span>' : 
+            '<span class="text-red-600">Checked Out</span>';
+        
+        resultContent.innerHTML = `
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600 text-sm">Author</p>
+                    <p class="font-medium">${book.author}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Status</p>
+                    <p class="font-medium">${availability}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Barcode</p>
+                    <p class="font-mono">${book.barcode}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Location</p>
+                    <p class="font-medium">${book.location || 'Main Library'}</p>
+                </div>
+            </div>
+        `;
+        
+        if (book.type === 'copy') {
+            actionButtons.innerHTML = `
+                <button onclick="checkinBook(${book.copy_id})" class="action-btn btn-checkin">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Check In
+                </button>
+                <button onclick="location.href='/admin/book/${book.id}'" class="action-btn btn-view">
+                    <i class="fas fa-eye mr-2"></i>View Book
+                </button>
+            `;
+        } else {
+            actionButtons.innerHTML = `
+                <button onclick="checkoutBook(${book.id})" class="action-btn btn-checkout">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Check Out
+                </button>
+                <button onclick="location.href='/admin/book/${book.id}'" class="action-btn btn-view">
+                    <i class="fas fa-eye mr-2"></i>View Book
+                </button>
+            `;
+        }
+        
+        currentResult = { type: 'book', id: book.id };
+    }
+    
+    addToHistory(data);
+}
+
+function loadHistory() {
+    fetch('/admin/api/scanner/history')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayHistory(data.history);
+            }
+        });
+}
+
+function displayHistory(history) {
+    const historyList = document.getElementById('history-list');
+    
+    if (history.length === 0) {
+        historyList.innerHTML = '<div class="text-center text-gray-500 py-4">No recent activity</div>';
+        return;
+    }
+    
+    let html = '';
+    history.forEach(item => {
+        html += `
+            <div class="history-item">
+                <div class="history-icon icon-${item.type}">
+                    <i class="fas fa-${item.type === 'checkin' ? 'sign-in-alt' : 'sync-alt'}"></i>
+                </div>
+                <div class="history-details">
+                    <p class="font-medium">${item.book}</p>
+                    <p class="text-sm text-gray-600">${item.patron}</p>
+                </div>
+                <div class="history-time">${item.timestamp}</div>
+            </div>
+        `;
+    });
+    
+    historyList.innerHTML = html;
+}
+
+function addToHistory(item) {
+    // This would update the history list dynamically
+    loadHistory(); // Simple refresh for now
+}
+
+function quickAction(action) {
+    if (action === 'checkout') {
+        window.location.href = '/admin/checkout';
+    } else if (action === 'checkin') {
+        window.location.href = '/admin/checkin';
+    } else if (action === 'renew') {
+        alert('Please scan a patron card to renew');
+    }
+}
+
+function startCheckout(patronId) {
+    window.location.href = `/admin/checkout?patron=${patronId}`;
+}
+
+function checkoutBook(bookId) {
+    window.location.href = `/admin/checkout?book=${bookId}`;
+}
+
+function checkinBook(copyId) {
+    fetch('/admin/checkin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ copy_id: copyId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Book checked in successfully');
+            loadHistory();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

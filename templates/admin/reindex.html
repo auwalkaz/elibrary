@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Solr Index Management</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Status Card -->
+        <div class="bg-white p-6 rounded-lg shadow border-2 border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-heartbeat text-yellow-400 mr-2"></i>
+                Index Status
+            </h2>
+            <div id="status-indicator" class="mb-4">
+                <div class="animate-pulse">Checking connection...</div>
+            </div>
+            <div id="stats" class="hidden">
+                <p class="mb-2">Total Documents: <span id="doc-count" class="font-bold">0</span></p>
+            </div>
+        </div>
+        
+        <!-- Actions Card -->
+        <div class="bg-white p-6 rounded-lg shadow border-2 border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-cogs text-yellow-400 mr-2"></i>
+                Actions
+            </h2>
+            
+            <button id="reindex-btn" 
+                    class="w-full bg-blue-900 text-white px-4 py-3 rounded-lg hover:bg-yellow-400 hover:text-blue-900 transition border-2 border-yellow-400 mb-3">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Reindex All Books
+            </button>
+            
+            <div class="text-sm text-gray-500 mt-4">
+                <p><i class="fas fa-info-circle mr-1"></i> Reindexing will process all books in batches. This may take several minutes.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Modal -->
+    <div id="progress-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">Reindexing in Progress</h3>
+            <div class="mb-4">
+                <div class="h-2 bg-gray-200 rounded">
+                    <div id="progress-bar" class="h-2 bg-yellow-400 rounded" style="width: 0%"></div>
+                </div>
+                <p id="progress-text" class="text-center mt-2">Starting...</p>
+            </div>
+            <button id="close-modal" class="w-full bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check status on load
+    checkStatus();
+    
+    // Reindex button
+    document.getElementById('reindex-btn').addEventListener('click', function() {
+        if (confirm('This will reindex all books. Continue?')) {
+            startReindex();
+        }
+    });
+    
+    // Close modal
+    document.getElementById('close-modal').addEventListener('click', function() {
+        document.getElementById('progress-modal').classList.add('hidden');
+    });
+});
+
+function checkStatus() {
+    fetch('/admin/reindex/status')
+        .then(response => response.json())
+        .then(data => {
+            const indicator = document.getElementById('status-indicator');
+            const stats = document.getElementById('stats');
+            
+            if (data.connected) {
+                indicator.innerHTML = '<div class="text-green-600"><i class="fas fa-check-circle mr-2"></i> Connected to Solr</div>';
+                stats.classList.remove('hidden');
+                document.getElementById('doc-count').textContent = data.total_documents;
+            } else {
+                indicator.innerHTML = '<div class="text-red-600"><i class="fas fa-exclamation-circle mr-2"></i> Connection Failed: ' + data.error + '</div>';
+            }
+        });
+}
+
+function startReindex() {
+    const modal = document.getElementById('progress-modal');
+    modal.classList.remove('hidden');
+    
+    fetch('/admin/reindex/start', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('progress-text').textContent = 'Reindexing started successfully';
+            document.getElementById('progress-bar').style.width = '100%';
+            // Refresh status after 5 seconds
+            setTimeout(checkStatus, 5000);
+        }
+    });
+}
+</script>
+{% endblock %}

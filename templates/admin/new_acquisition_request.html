@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #1a3c1a;
+        box-shadow: 0 0 0 3px rgba(26,60,26,0.1);
+    }
+    
+    .input-group {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .input-group .form-input {
+        flex: 1;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #1a3c1a, #2d5a2d);
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        width: 100%;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .required::after {
+        content: '*';
+        color: #dc2626;
+        margin-left: 0.25rem;
+    }
+    
+    .info-box {
+        background: #f0f9ff;
+        border-left: 4px solid #1a3c1a;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container py-8">
+    <h1 class="text-3xl font-bold text-white mb-6 text-center">📝 New Acquisition Request</h1>
+    
+    <div class="form-card">
+        <div class="info-box">
+            <i class="fas fa-info-circle text-green-700 mr-2"></i>
+            Submit a request to acquire new materials for the library. Your request will be reviewed by the acquisition team.
+        </div>
+        
+        <form method="POST" action="{{ url_for('admin.new_acquisition_request') }}">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold mb-4">Basic Information</h3>
+                
+                <div class="mb-4">
+                    <label class="form-label required">Title</label>
+                    <input type="text" name="title" class="form-input" required 
+                           placeholder="e.g., The Art of War">
+                </div>
+                
+                <div class="input-group">
+                    <div>
+                        <label class="form-label required">Author</label>
+                        <input type="text" name="author" class="form-input" required
+                               placeholder="e.g., Sun Tzu">
+                    </div>
+                    <div>
+                        <label class="form-label">ISBN</label>
+                        <input type="text" name="isbn" class="form-input"
+                               placeholder="978-3-16-148410-0">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div>
+                        <label class="form-label">Publisher</label>
+                        <input type="text" name="publisher" class="form-input"
+                               placeholder="e.g., Penguin Books">
+                    </div>
+                    <div>
+                        <label class="form-label">Publication Year</label>
+                        <input type="number" name="publication_year" class="form-input"
+                               placeholder="2024" min="1000" max="2026">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Material Details -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold mb-4">Material Details</h3>
+                
+                <div class="input-group">
+                    <div>
+                        <label class="form-label required">Material Type</label>
+                        <select name="material_type" class="form-input" required>
+                            <option value="book">Book</option>
+                            <option value="journal">Journal</option>
+                            <option value="report">Report</option>
+                            <option value="manual">Manual</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label required">Format</label>
+                        <select name="format_type" class="form-input" required>
+                            <option value="physical">Physical</option>
+                            <option value="digital">Digital</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <div>
+                        <label class="form-label required">Priority</label>
+                        <select name="priority" class="form-input" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Estimated Cost (₦)</label>
+                        <input type="number" name="estimated_cost" class="form-input" step="0.01" min="0"
+                               placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label">Budget Code</label>
+                    <input type="text" name="budget_code" class="form-input"
+                           placeholder="e.g., BUD-2024-001">
+                </div>
+            </div>
+            
+            <!-- Justification -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold mb-4">Justification</h3>
+                
+                <div class="mb-4">
+                    <label class="form-label required">Reason for Request</label>
+                    <textarea name="justification" rows="4" class="form-input" required
+                              placeholder="Explain why this material is needed for the library..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Additional Notes -->
+            <div class="form-section">
+                <h3 class="text-lg font-semibold mb-4">Additional Notes</h3>
+                
+                <div>
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" rows="3" class="form-input"
+                              placeholder="Any additional information..."></textarea>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane mr-2"></i> Submit Request
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

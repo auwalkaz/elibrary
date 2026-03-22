@@ -1,0 +1,576 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 3px solid #ffd700;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .profile-header h1 {
+        color: white !important;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        font-weight: 700;
+        font-size: 2.5rem;
+    }
+    
+    .profile-header p {
+        color: rgba(255, 255, 255, 0.95) !important;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        font-size: 1.25rem;
+    }
+    
+    .profile-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .profile-card {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: 2px solid #e5e7eb;
+    }
+    
+    .profile-cover {
+        height: 150px;
+        background: linear-gradient(135deg, #0a1f3a, #1a3b5c);
+        position: relative;
+    }
+    
+    .profile-avatar {
+        position: absolute;
+        bottom: -50px;
+        left: 2rem;
+        width: 120px;
+        height: 120px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid #ffd700;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .profile-avatar i {
+        font-size: 4rem;
+        color: #0a1f3a;
+    }
+    
+    .profile-info {
+        padding: 4rem 2rem 2rem 2rem;
+    }
+    
+    .profile-name {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a1f3a;
+        margin-bottom: 0.25rem;
+    }
+    
+    .profile-username {
+        color: #6b7280;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .profile-username i {
+        color: #ffd700;
+    }
+    
+    .profile-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .badge-admin {
+        background: #ffd700;
+        color: #0a1f3a;
+    }
+    
+    .badge-user {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+    
+    .badge-active {
+        background: #10b981;
+        color: white;
+    }
+    
+    .badge-inactive {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .info-item {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .info-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-label i {
+        color: #ffd700;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0a1f3a;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        text-align: center;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        border-color: #ffd700;
+        transform: translateY(-3px);
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0a1f3a;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e5e7eb;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: #0a1f3a;
+        color: white;
+        border: 2px solid #ffd700;
+    }
+    
+    .btn-primary:hover {
+        background: #ffd700;
+        color: #0a1f3a;
+        transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+        background: #ffd700;
+        color: #0a1f3a;
+        border: 2px solid #0a1f3a;
+    }
+    
+    .btn-secondary:hover {
+        background: #0a1f3a;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+        border: 2px solid #dc2626;
+    }
+    
+    .btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+    
+    .recent-activity {
+        margin-top: 2rem;
+        background: #f9fafb;
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .activity-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #0a1f3a;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .activity-title i {
+        color: #ffd700;
+    }
+    
+    .activity-list {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 215, 0, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .activity-icon i {
+        color: #ffd700;
+    }
+    
+    .activity-details {
+        flex: 1;
+    }
+    
+    .activity-text {
+        font-weight: 500;
+        color: #0a1f3a;
+    }
+    
+    .activity-time {
+        font-size: 0.8rem;
+        color: #9ca3af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Profile Header - UPDATED with bright, visible text -->
+<div class="profile-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">My Profile</h1>
+        <p class="text-white text-lg md:text-xl opacity-90 drop-shadow">Manage your account information and settings</p>
+    </div>
+</div>
+
+<div class="profile-container px-4 py-8">
+    <!-- Profile Card -->
+    <div class="profile-card">
+        <div class="profile-cover">
+            <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        
+        <div class="profile-info">
+            <div class="flex justify-between items-start flex-wrap gap-4">
+                <div>
+                    <h2 class="profile-name">{{ user.full_name or user.username }}</h2>
+                    <div class="profile-username">
+                        <i class="fas fa-at"></i>
+                        <span>{{ user.username }}</span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <span class="profile-badge {% if user.role == 'admin' %}badge-admin{% else %}badge-user{% endif %}">
+                        <i class="fas {% if user.role == 'admin' %}fa-crown{% else %}fa-user{% endif %}"></i>
+                        {{ user.role|title }}
+                    </span>
+                    <span class="profile-badge {% if user.membership_status == 'active' %}badge-active{% else %}badge-inactive{% endif %}">
+                        <i class="fas {% if user.membership_status == 'active' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                        {{ user.membership_status|title }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Statistics Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ reading_history|default(0) }}</div>
+                    <div class="stat-label">Books Read</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ downloads_count|default(0) }}</div>
+                    <div class="stat-label">Downloads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ wishlist_count|default(0) }}</div>
+                    <div class="stat-label">Wishlist</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ reviews_count|default(0) }}</div>
+                    <div class="stat-label">Reviews</div>
+                </div>
+            </div>
+            
+            <!-- Personal Information Grid -->
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-id-card text-yellow-400 mr-2"></i>
+                Personal Information
+            </h3>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-envelope"></i>
+                        Email Address
+                    </div>
+                    <div class="info-value">{{ user.email }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-phone"></i>
+                        Phone Number
+                    </div>
+                    <div class="info-value">{{ user.phone_number or 'Not provided' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-badge"></i>
+                        Service Number
+                    </div>
+                    <div class="info-value">{{ user.service_number or 'Not provided' }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        Member Since
+                    </div>
+                    <div class="info-value">{{ user.created_at.strftime('%B %d, %Y') }}</div>
+                </div>
+            </div>
+            
+            <!-- Address -->
+            <div class="info-item mb-4">
+                <div class="info-label">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Address
+                </div>
+                <div class="info-value">{{ user.address or 'Not provided' }}</div>
+            </div>
+            
+            <!-- Recent Activity -->
+            {% if recent_downloads or recent_reads %}
+            <div class="recent-activity">
+                <h3 class="activity-title">
+                    <i class="fas fa-history"></i>
+                    Recent Activity
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% if recent_downloads %}
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-download text-yellow-400 mr-2"></i>
+                            Recent Downloads
+                        </h4>
+                        <ul class="activity-list">
+                            {% for download in recent_downloads %}
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-download"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <div class="activity-text">{{ download.book.title }}</div>
+                                    <div class="activity-time">{{ download.timestamp.strftime('%H:%M, %d %b %Y') }}</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if recent_reads %}
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center">
+                            <i class="fas fa-book-open text-yellow-400 mr-2"></i>
+                            Recent Reads
+                        </h4>
+                        <ul class="activity-list">
+                            {% for read in recent_reads %}
+                            <li class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <div class="activity-text">{{ read.book.title }}</div>
+                                    <div class="activity-time">{{ read.last_read.strftime('%H:%M, %d %b %Y') }}</div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <!-- Edit Profile -->
+                <a href="{{ url_for('auth.edit_profile') }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Profile
+                </a>
+                
+                <!-- User Dashboard -->
+                <a href="{{ url_for('auth.user_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-chart-pie"></i>
+                    View Dashboard
+                </a>
+                
+                <!-- Library Card -->
+                {% if user.library_card %}
+                <a href="{{ url_for('auth.view_library_card') }}" class="btn btn-secondary">
+                    <i class="fas fa-id-card"></i>
+                    Library Card
+                </a>
+                {% endif %}
+                
+                <!-- Borrowing History -->
+                <a href="{{ url_for('auth.borrowing_history') }}" class="btn btn-secondary">
+                    <i class="fas fa-history"></i>
+                    Borrowing History
+                </a>
+                
+                <!-- Download History -->
+                <a href="{{ url_for('auth.download_history') }}" class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                    Download History
+                </a>
+                
+                <!-- Change Password Button -->
+                <button onclick="openPasswordModal()" class="btn btn-secondary">
+                    <i class="fas fa-lock"></i>
+                    Change Password
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-lock text-yellow-400 mr-2"></i>
+            Change Password
+        </h3>
+        
+        <form action="{{ url_for('auth.change_password') }}" method="POST">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                <input type="password" name="current_password" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                <input type="password" name="new_password" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                <input type="password" name="confirm_password" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closePasswordModal()" 
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300">
+                    Change Password
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPasswordModal() {
+    document.getElementById('passwordModal').classList.remove('hidden');
+    document.getElementById('passwordModal').classList.add('flex');
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').classList.add('hidden');
+    document.getElementById('passwordModal').classList.remove('flex');
+}
+
+// Close modal when clicking outside
+document.getElementById('passwordModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePasswordModal();
+    }
+});
+</script>
+{% endblock %}

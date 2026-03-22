@@ -1,0 +1,545 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .scan-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .scan-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .scan-area {
+        border: 3px dashed #4299e1;
+        border-radius: 1.5rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: #f7fafc;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+    
+    .scan-area:hover {
+        background: #ebf8ff;
+        border-color: #2b6cb0;
+    }
+    
+    .scan-area i {
+        font-size: 4rem;
+        color: #4299e1;
+        margin-bottom: 1rem;
+    }
+    
+    .scan-area h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    .scan-area p {
+        color: #718096;
+        font-size: 1rem;
+    }
+    
+    .manual-input {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .manual-input input {
+        flex: 1;
+        padding: 1rem 1.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 1rem;
+        font-size: 1rem;
+        transition: all 0.2s;
+        font-family: monospace;
+        letter-spacing: 1px;
+    }
+    
+    .manual-input input:focus {
+        outline: none;
+        border-color: #4299e1;
+        box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    }
+    
+    .manual-input button {
+        padding: 1rem 2rem;
+        background: #4299e1;
+        color: white;
+        border: none;
+        border-radius: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .manual-input button:hover {
+        background: #3182ce;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+    }
+    
+    .manual-input button i {
+        font-size: 1rem;
+    }
+    
+    .transaction-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: all 0.2s;
+    }
+    
+    .transaction-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .transaction-card.active { border-left-color: #48bb78; }
+    .transaction-card.overdue { border-left-color: #f56565; }
+    
+    .transaction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .transaction-header h4 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .status-badge.active {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    
+    .status-badge.overdue {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+    
+    .transaction-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 1rem 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #2d3748;
+    }
+    
+    .detail-value.overdue {
+        color: #e53e3e;
+        font-weight: 600;
+    }
+    
+    .fine-amount {
+        color: #e53e3e;
+        font-weight: 700;
+    }
+    
+    .btn-checkin {
+        background: #48bb78;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-checkin:hover {
+        background: #38a169;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+    }
+    
+    .recent-list {
+        margin-top: 2rem;
+    }
+    
+    .recent-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .recent-title i {
+        color: #4299e1;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f7fafc;
+        border-radius: 1rem;
+        color: #a0aec0;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: white;
+        border-radius: 1rem;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        border-left: 4px solid;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        max-width: 400px;
+    }
+    
+    .notification.success { border-left-color: #48bb78; }
+    .notification.error { border-left-color: #f56565; }
+    .notification.warning { border-left-color: #ecc94b; }
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .notification-content i {
+        font-size: 1.5rem;
+    }
+    
+    .notification.success i { color: #48bb78; }
+    .notification.error i { color: #f56565; }
+    .notification.warning i { color: #ecc94b; }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .hidden {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="scan-container py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">📥 Check In Books</h1>
+    <p class="text-gray-600 mb-8">Scan or enter barcode to return books</p>
+    
+    <div class="scan-card">
+        <!-- Scan Area -->
+        <div class="scan-area" onclick="document.getElementById('barcode').focus()">
+            <i class="fas fa-camera"></i>
+            <h3>Scan Barcode</h3>
+            <p>Click here and scan or enter barcode manually</p>
+        </div>
+        
+        <!-- Manual Entry -->
+        <div class="manual-input">
+            <input type="text" id="barcode" placeholder="Enter barcode (e.g., NAEL-20240301-0001-001)" autofocus>
+            <button onclick="processCheckin()">
+                <i class="fas fa-search"></i>
+                Find & Check In
+            </button>
+        </div>
+        
+        <!-- Current Transaction (shown when item is found) -->
+        <div id="transactionDetails" class="hidden">
+            <h3 class="text-lg font-semibold mb-4">Item Found</h3>
+            <div id="transactionCard" class="transaction-card">
+                <!-- Will be filled by JavaScript -->
+            </div>
+            <div class="flex justify-end mt-4">
+                <button id="confirmCheckin" class="btn-checkin">
+                    <i class="fas fa-check-circle"></i>
+                    Confirm Check In
+                </button>
+            </div>
+        </div>
+        
+        <!-- Recent Check-ins -->
+        <div class="recent-list">
+            <div class="recent-title">
+                <i class="fas fa-history"></i>
+                Recent Check-ins
+            </div>
+            <div id="recentTransactions">
+                <!-- Will be filled by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Template -->
+<div id="notification" class="notification hidden">
+    <div class="notification-content">
+        <i id="notificationIcon" class="fas"></i>
+        <div id="notificationMessage"></div>
+    </div>
+</div>
+
+<script>
+let currentTransaction = null;
+let recentCheckins = [];
+
+// Load recent check-ins from localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    const saved = localStorage.getItem('recentCheckins');
+    if (saved) {
+        recentCheckins = JSON.parse(saved);
+        displayRecentCheckins();
+    }
+    
+    // Focus on barcode input
+    document.getElementById('barcode').focus();
+    
+    // Handle enter key
+    document.getElementById('barcode').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            processCheckin();
+        }
+    });
+});
+
+function processCheckin() {
+    const barcode = document.getElementById('barcode').value.trim();
+    
+    if (!barcode) {
+        showNotification('Please enter a barcode', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    showNotification('Searching for item...', 'info');
+    
+    // Simulate API call - In production, this would call your backend
+    setTimeout(() => {
+        // Mock data - replace with actual API call
+        const mockTransaction = {
+            id: Math.floor(Math.random() * 1000),
+            barcode: barcode,
+            title: 'The Art of War',
+            author: 'Sun Tzu',
+            borrower: 'Lt. Col. John Smith',
+            checkoutDate: '2024-02-15',
+            dueDate: '2024-03-01',
+            status: 'active',
+            fine: 0
+        };
+        
+        // Check if overdue
+        const dueDate = new Date(mockTransaction.dueDate);
+        const today = new Date();
+        if (dueDate < today) {
+            const daysOverdue = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+            mockTransaction.status = 'overdue';
+            mockTransaction.fine = daysOverdue * 50; // ₦50 per day
+        }
+        
+        displayTransaction(mockTransaction);
+        document.getElementById('barcode').value = '';
+    }, 500);
+}
+
+function displayTransaction(transaction) {
+    currentTransaction = transaction;
+    
+    const statusClass = transaction.status === 'overdue' ? 'overdue' : 'active';
+    const fineDisplay = transaction.fine > 0 ? `₦${transaction.fine}` : 'None';
+    const dueDateClass = transaction.status === 'overdue' ? 'overdue' : '';
+    
+    const html = `
+        <div class="transaction-header">
+            <h4>${transaction.title}</h4>
+            <span class="status-badge ${statusClass}">${transaction.status.toUpperCase()}</span>
+        </div>
+        <p class="text-gray-600 mb-3">by ${transaction.author}</p>
+        <div class="transaction-details">
+            <div class="detail-item">
+                <span class="detail-label">Borrower</span>
+                <span class="detail-value">${transaction.borrower}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Checkout Date</span>
+                <span class="detail-value">${transaction.checkoutDate}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Due Date</span>
+                <span class="detail-value ${dueDateClass}">${transaction.dueDate}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Fine</span>
+                <span class="detail-value fine-amount">${fineDisplay}</span>
+            </div>
+        </div>
+        <p class="text-sm text-gray-500">Barcode: ${transaction.barcode}</p>
+    `;
+    
+    document.getElementById('transactionCard').innerHTML = html;
+    document.getElementById('transactionDetails').classList.remove('hidden');
+    
+    // Scroll to transaction
+    document.getElementById('transactionDetails').scrollIntoView({ behavior: 'smooth' });
+}
+
+function confirmCheckin() {
+    if (!currentTransaction) return;
+    
+    // Add to recent check-ins
+    const checkin = {
+        ...currentTransaction,
+        checkinTime: new Date().toLocaleString(),
+        returned: true
+    };
+    
+    recentCheckins.unshift(checkin);
+    if (recentCheckins.length > 5) recentCheckins.pop();
+    
+    // Save to localStorage
+    localStorage.setItem('recentCheckins', JSON.stringify(recentCheckins));
+    
+    // Display success
+    showNotification(`✅ ${currentTransaction.title} checked in successfully`, 'success');
+    
+    // Clear current transaction
+    currentTransaction = null;
+    document.getElementById('transactionDetails').classList.add('hidden');
+    document.getElementById('barcode').focus();
+    
+    // Update recent list
+    displayRecentCheckins();
+}
+
+function displayRecentCheckins() {
+    const container = document.getElementById('recentTransactions');
+    
+    if (recentCheckins.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <p>No recent check-ins</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    recentCheckins.forEach(item => {
+        html += `
+            <div class="bg-white rounded-lg p-4 mb-2 border border-gray-200 hover:shadow-md transition">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-medium">${item.title}</p>
+                        <p class="text-sm text-gray-600">by ${item.author}</p>
+                        <p class="text-xs text-gray-500 mt-1">Barcode: ${item.barcode}</p>
+                    </div>
+                    <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                        <i class="fas fa-check-circle mr-1"></i>Returned
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="far fa-clock mr-1"></i> ${item.checkinTime}
+                </p>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const icon = document.getElementById('notificationIcon');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    // Set icon based on type
+    const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        warning: 'fa-exclamation-triangle',
+        info: 'fa-info-circle'
+    };
+    
+    notification.className = `notification ${type}`;
+    icon.className = `fas ${icons[type] || icons.info}`;
+    messageEl.textContent = message;
+    
+    notification.classList.remove('hidden');
+    
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 3000);
+}
+
+// Make confirmCheckin available globally
+window.confirmCheckin = confirmCheckin;
+
+// Add event listener for confirm button
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'confirmCheckin' || e.target.closest('#confirmCheckin')) {
+        confirmCheckin();
+    }
+});
+</script>
+{% endblock %}
