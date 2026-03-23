@@ -97,25 +97,19 @@ class Config:
     SMS_SENDER_ID = os.environ.get('SMS_SENDER_ID', 'NAEL')
     
     # ========== WHATSAPP NOTIFICATION CONFIGURATION ==========
-    # Using Twilio WhatsApp API
     WHATSAPP_ENABLED = os.environ.get('WHATSAPP_ENABLED', 'False').lower() == 'true'
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
     TWILIO_WHATSAPP_NUMBER = os.environ.get('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886')
-    
-    # WhatsApp Business API (if you have official approval)
     WHATSAPP_BUSINESS_API_URL = os.environ.get('WHATSAPP_BUSINESS_API_URL')
     WHATSAPP_ACCESS_TOKEN = os.environ.get('WHATSAPP_ACCESS_TOKEN')
     WHATSAPP_PHONE_NUMBER_ID = os.environ.get('WHATSAPP_PHONE_NUMBER_ID')
-    
-    # WhatsApp message templates
     WHATSAPP_APPROVAL_TEMPLATE = os.environ.get('WHATSAPP_APPROVAL_TEMPLATE', 'registration_approved')
     WHATSAPP_REJECTION_TEMPLATE = os.environ.get('WHATSAPP_REJECTION_TEMPLATE', 'registration_rejected')
     WHATSAPP_WELCOME_TEMPLATE = os.environ.get('WHATSAPP_WELCOME_TEMPLATE', 'welcome_message')
     
     @property
     def WHATSAPP_CONFIGURED(self):
-        """Check if WhatsApp is properly configured"""
         if not self.WHATSAPP_ENABLED:
             return False
         return all([
@@ -125,7 +119,6 @@ class Config:
         ])
     
     # ========== NIGERIAN ARMY OAUTH CONFIGURATION ==========
-    # Get these from NA IT department
     NA_OAUTH_CLIENT_ID = os.environ.get('NA_OAUTH_CLIENT_ID')
     NA_OAUTH_CLIENT_SECRET = os.environ.get('NA_OAUTH_CLIENT_SECRET')
     NA_OAUTH_AUTHORIZATION_URL = os.environ.get('NA_OAUTH_AUTHORIZATION_URL', 'https://auth.army.mil.ng/oauth/authorize')
@@ -135,7 +128,6 @@ class Config:
     
     @property
     def NA_OAUTH_CONFIGURED(self):
-        """Check if NA OAuth is properly configured"""
         return all([
             self.NA_OAUTH_CLIENT_ID,
             self.NA_OAUTH_CLIENT_SECRET,
@@ -161,7 +153,7 @@ class Config:
     SOLR_TIMEOUT = int(os.environ.get('SOLR_TIMEOUT', 10))
     SOLR_BATCH_SIZE = int(os.environ.get('SOLR_BATCH_SIZE', 100))
     
-    # ========== Celery Configuration (for async tasks) ==========
+    # ========== Celery Configuration ==========
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
     CELERY_ACCEPT_CONTENT = ['json']
@@ -169,10 +161,9 @@ class Config:
     CELERY_RESULT_SERIALIZER = 'json'
     CELERY_TIMEZONE = 'Africa/Lagos'
     CELERY_TASK_TRACK_STARTED = True
-    CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+    CELERY_TASK_TIME_LIMIT = 30 * 60
     CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
     
-    # Celery Beat Schedule (periodic tasks)
     CELERY_BEAT_SCHEDULE = {
         'check-overdue-items': {
             'task': 'tasks.circulation_tasks.check_overdue_items',
@@ -201,48 +192,34 @@ class Config:
     }
     
     # ========== Online Reading Configuration ==========
-    # PDF.js settings
     PDFJS_PATH = os.path.join(BASE_DIR, 'static', 'pdfjs')
-    PDF_VIEWER_MODE = 'pdfjs'  # 'pdfjs' or 'embed' or 'custom'
-    
-    # Reading session settings
-    TRACK_READING_PROGRESS = True  # Track user reading progress
-    AUTO_SAVE_INTERVAL = 30  # Auto-save reading progress every 30 seconds
-    MAX_BOOKMARKS_PER_BOOK = 50  # Maximum bookmarks per user per book
-    MAX_ANNOTATIONS_PER_BOOK = 100  # Maximum annotations per user per book
-    
-    # Reading access control
-    ALLOW_PUBLIC_READING = False  # Allow reading without login
-    REQUIRE_LIBRARY_CARD_FOR_READING = True  # Require library card to read
-    
-    # Reading analytics
-    COLLECT_READING_ANALYTICS = True  # Track reading sessions for analytics
-    RETAIN_READING_SESSIONS_DAYS = 30  # How long to keep session data
-    
-    # PDF text extraction for search
-    EXTRACT_PDF_TEXT_FOR_SEARCH = False  # Set to True to extract text for Solr
-    PDF_TEXT_EXTRACTION_METHOD = 'pypdf2'  # 'pypdf2' or 'textract' or 'pdfminer'
-    PDF_TEXT_EXTRACTION_TIMEOUT = 60  # Timeout in seconds
-    
-    # Reading interface customization
-    DEFAULT_ZOOM_LEVEL = 100  # Default zoom percentage
+    PDF_VIEWER_MODE = 'pdfjs'
+    TRACK_READING_PROGRESS = True
+    AUTO_SAVE_INTERVAL = 30
+    MAX_BOOKMARKS_PER_BOOK = 50
+    MAX_ANNOTATIONS_PER_BOOK = 100
+    ALLOW_PUBLIC_READING = False
+    REQUIRE_LIBRARY_CARD_FOR_READING = True
+    COLLECT_READING_ANALYTICS = True
+    RETAIN_READING_SESSIONS_DAYS = 30
+    EXTRACT_PDF_TEXT_FOR_SEARCH = False
+    PDF_TEXT_EXTRACTION_METHOD = 'pypdf2'
+    PDF_TEXT_EXTRACTION_TIMEOUT = 60
+    DEFAULT_ZOOM_LEVEL = 100
     ALLOW_ZOOM_CONTROLS = True
     ALLOW_FULLSCREEN = True
-    ALLOW_TEXT_SELECTION = True  # Allow users to select/copy text
-    ALLOW_PRINTING = False  # Allow printing of PDFs (security consideration)
-    ALLOW_DOWNLOAD = False  # Allow downloading of PDFs (set to True if you want users to download)
-    
-    # Reading limits
-    MAX_CONCURRENT_READERS_PER_BOOK = 10  # Max simultaneous readers for same book
-    READING_TIMEOUT_MINUTES = 30  # Session timeout for inactive readers
+    ALLOW_TEXT_SELECTION = True
+    ALLOW_PRINTING = False
+    ALLOW_DOWNLOAD = False
+    MAX_CONCURRENT_READERS_PER_BOOK = 10
+    READING_TIMEOUT_MINUTES = 30
     
     # ========== BACKUP SETTINGS ==========
     BACKUP_ENABLED = os.environ.get('BACKUP_ENABLED', 'True').lower() == 'true'
     BACKUP_PATH = os.path.join(BASE_DIR, "backups")
     BACKUP_RETENTION_DAYS = int(os.environ.get('BACKUP_RETENTION_DAYS', 30))
-    AUTO_BACKUP_SCHEDULE = os.environ.get('AUTO_BACKUP_SCHEDULE', '0 2 * * *')  # Daily at 2 AM
+    AUTO_BACKUP_SCHEDULE = os.environ.get('AUTO_BACKUP_SCHEDULE', '0 2 * * *')
     
-    # AWS S3 (for cloud backups)
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME', 'nael-backups')
@@ -274,7 +251,7 @@ class Config:
     # ========== LOGGING ==========
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
     LOG_FILE = os.environ.get('LOG_FILE', os.path.join(BASE_DIR, 'logs', 'app.log'))
-    LOG_MAX_BYTES = 10 * 1024 * 1024  # 10MB
+    LOG_MAX_BYTES = 10 * 1024 * 1024
     LOG_BACKUP_COUNT = 5
 
 
@@ -282,18 +259,13 @@ class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
     
-    # Development-specific settings
-    SESSION_COOKIE_SECURE = False  # HTTP in development
+    SESSION_COOKIE_SECURE = False
     EXPLAIN_TEMPLATE_LOADING = False
-    DEBUG_TB_ENABLED = True  # Flask-DebugToolbar
-    
-    # Better error messages
+    DEBUG_TB_ENABLED = True
     PROPAGATE_EXCEPTIONS = True
     
-    # FIXED: Set BASE_DIR to the correct elibrary1 path
     BASE_DIR = '/home/auwalkz/elibrary1'
     
-    # Override paths with correct elibrary1 paths
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
     BOOK_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, "books")
     COVER_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, "covers")
@@ -302,55 +274,44 @@ class DevelopmentConfig(Config):
     LOG_FOLDER = os.path.join(BASE_DIR, "logs")
     DATABASE_PATH = os.path.join(BASE_DIR, "library.db")
     
-    # Update database URI
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATABASE_PATH}"
-    SQLALCHEMY_ECHO = True  # Log SQL queries
+    SQLALCHEMY_ECHO = True
     
-    # Development download limits (can be higher for testing)
-    MAX_DOWNLOADS_PER_DAY = 10      # Higher for testing
+    MAX_DOWNLOADS_PER_DAY = 10
     MAX_DOWNLOADS_PER_WEEK = 40
     MAX_DOWNLOADS_PER_MONTH = 100
     
-    # ========== DEVELOPMENT ADMIN REGISTRATION ==========
-    ADMIN_REGISTRATION_ENABLED = True  # Enable for testing
+    ADMIN_REGISTRATION_ENABLED = True
     ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'dev-secret-key-123')
     ADMIN_CODE = os.environ.get('ADMIN_CODE', 'dev-admin-code-456')
     
-    # ========== DEVELOPMENT TWO-FACTOR ==========
-    TWO_FACTOR_ENABLED = False  # Disable for easier testing
-    TWO_FACTOR_REQUIRED_ROLES = []  # No roles required
+    TWO_FACTOR_ENABLED = False
+    TWO_FACTOR_REQUIRED_ROLES = []
     
-    # ========== DEVELOPMENT SOLR SETTINGS ==========
     SOLR_ENABLED = os.environ.get('SOLR_ENABLED', 'False').lower() == 'true'
     SOLR_URL = os.environ.get('SOLR_URL', 'http://localhost:8983/solr/')
     SOLR_CORE = os.environ.get('SOLR_CORE', 'nigerian_army_library_dev')
     
-    # ========== DEVELOPMENT CELERY SETTINGS ==========
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-    CELERY_TASK_ALWAYS_EAGER = False  # Set to True for synchronous tasks (easier debugging)
+    CELERY_TASK_ALWAYS_EAGER = False
     CELERY_TASK_EAGER_PROPAGATES = True
     
-    # ========== DEVELOPMENT READING SETTINGS ==========
-    EXTRACT_PDF_TEXT_FOR_SEARCH = True  # Enable in development
-    ALLOW_PUBLIC_READING = True  # Allow testing without login
-    REQUIRE_LIBRARY_CARD_FOR_READING = False  # Don't require library card in dev
-    ALLOW_DOWNLOAD = True  # Allow downloads in dev for testing
-    ALLOW_PRINTING = True  # Allow printing in dev
+    EXTRACT_PDF_TEXT_FOR_SEARCH = True
+    ALLOW_PUBLIC_READING = True
+    REQUIRE_LIBRARY_CARD_FOR_READING = False
+    ALLOW_DOWNLOAD = True
+    ALLOW_PRINTING = True
     COLLECT_READING_ANALYTICS = True
     
-    # Increase limits for development
     MAX_BOOKMARKS_PER_BOOK = 100
     MAX_ANNOTATIONS_PER_BOOK = 200
     
-    # ========== DEVELOPMENT BACKUP ==========
-    BACKUP_ENABLED = False  # Disable backups in development
+    BACKUP_ENABLED = False
     AUTO_BACKUP_SCHEDULE = None
     
-    # ========== DEVELOPMENT API ==========
-    API_RATE_LIMIT = "10000/day;1000/hour"  # Much higher in development
-    API_KEY_EXPIRY_DAYS = 3650  # 10 years
+    API_RATE_LIMIT = "10000/day;1000/hour"
+    API_KEY_EXPIRY_DAYS = 3650
     
-    # ========== DEVELOPMENT WHATSAPP ==========
     WHATSAPP_ENABLED = os.environ.get('WHATSAPP_ENABLED', 'False').lower() == 'true'
     TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', 'test_account_sid')
     TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', 'test_auth_token')
@@ -358,17 +319,13 @@ class DevelopmentConfig(Config):
     
     @property
     def WHATSAPP_CONFIGURED(self):
-        """In development, WhatsApp is optional"""
         return self.WHATSAPP_ENABLED and bool(self.TWILIO_ACCOUNT_SID and self.TWILIO_ACCOUNT_SID != 'test_account_sid')
     
-    # ========== DEVELOPMENT NA OAUTH ==========
-    # In development, you can use test credentials or disable
     NA_OAUTH_CLIENT_ID = os.environ.get('NA_OAUTH_CLIENT_ID')
     NA_OAUTH_CLIENT_SECRET = os.environ.get('NA_OAUTH_CLIENT_SECRET')
     
     @property
     def NA_OAUTH_CONFIGURED(self):
-        """In development, we can still use OAuth if credentials are provided"""
         return bool(self.NA_OAUTH_CLIENT_ID and self.NA_OAUTH_CLIENT_SECRET)
 
 
@@ -376,58 +333,40 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = False
     
-    # Use in-memory database for tests
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_ECHO = False
     
-    # Disable CSRF for testing
     WTF_CSRF_ENABLED = False
-    
-    # Disable rate limiting for tests
     RATELIMIT_ENABLED = False
     
-    # Test-specific settings
     UPLOAD_FOLDER = os.path.join(Config.BASE_DIR, "test_uploads")
-    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # 1MB limit for tests
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024
     
-    # Testing download limits
-    MAX_DOWNLOADS_PER_DAY = 100      # Unlimited for testing
+    MAX_DOWNLOADS_PER_DAY = 100
     MAX_DOWNLOADS_PER_WEEK = 500
     MAX_DOWNLOADS_PER_MONTH = 2000
     
-    # ========== TESTING ADMIN REGISTRATION ==========
-    ADMIN_REGISTRATION_ENABLED = True  # Enable for testing
+    ADMIN_REGISTRATION_ENABLED = True
     ADMIN_SECRET_KEY = 'test-secret-key'
     ADMIN_CODE = 'test-admin-code'
     
-    # ========== TESTING TWO-FACTOR ==========
     TWO_FACTOR_ENABLED = False
-    
-    # ========== TESTING SOLR SETTINGS ==========
-    SOLR_ENABLED = False  # Disable Solr for tests
-    
-    # ========== TESTING CELERY SETTINGS ==========
-    CELERY_TASK_ALWAYS_EAGER = True  # Run tasks synchronously for testing
+    SOLR_ENABLED = False
+    CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
     
-    # ========== TESTING READING SETTINGS ==========
-    EXTRACT_PDF_TEXT_FOR_SEARCH = False  # Disable to speed up tests
+    EXTRACT_PDF_TEXT_FOR_SEARCH = False
     ALLOW_PUBLIC_READING = True
     REQUIRE_LIBRARY_CARD_FOR_READING = False
-    COLLECT_READING_ANALYTICS = False  # Disable analytics in tests
-    RETAIN_READING_SESSIONS_DAYS = 1  # Short retention for tests
+    COLLECT_READING_ANALYTICS = False
+    RETAIN_READING_SESSIONS_DAYS = 1
     
-    # ========== TESTING BACKUP ==========
     BACKUP_ENABLED = False
-    
-    # ========== TESTING API ==========
     API_ENABLED = True
-    API_RATE_LIMIT = "10000/minute"  # Unlimited for tests
+    API_RATE_LIMIT = "10000/minute"
     
-    # ========== TESTING WHATSAPP ==========
     WHATSAPP_ENABLED = False
     
-    # ========== TESTING NA OAUTH ==========
     NA_OAUTH_CLIENT_ID = 'test_client_id'
     NA_OAUTH_CLIENT_SECRET = 'test_client_secret'
     
@@ -440,102 +379,82 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     
-    # Override security settings for production
-    SESSION_COOKIE_SECURE = True  # HTTPS only
+    SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Strict'  # More strict in production
+    SESSION_COOKIE_SAMESITE = 'Strict'
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=2)  # Shorter sessions
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
     
-    # Production cache
     CACHE_TYPE = "RedisCache"
     CACHE_REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-    
-    # Production rate limiting
     RATELIMIT_STORAGE_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
     
-    # Logging
+    # ========== FIXED: Use writable log path for Render ==========
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'WARNING')
-    LOG_FILE = os.environ.get('LOG_FILE', '/var/log/nael/app.log')
+    LOG_FILE = os.environ.get('LOG_FILE', os.path.join(Config.BASE_DIR, 'logs', 'app.log'))
     
-    # Production download limits (stricter)
     MAX_DOWNLOADS_PER_DAY = 5
     MAX_DOWNLOADS_PER_WEEK = 15
     MAX_DOWNLOADS_PER_MONTH = 40
     
-    # ========== PRODUCTION ADMIN REGISTRATION ==========
     ADMIN_REGISTRATION_ENABLED = os.environ.get('ADMIN_REGISTRATION_ENABLED', 'False').lower() == 'true'
     
     @property
     def ADMIN_SECRET_KEY(self):
         key = os.environ.get('ADMIN_SECRET_KEY')
         if not key and self.ADMIN_REGISTRATION_ENABLED:
-            raise ValueError("ADMIN_SECRET_KEY must be set in production environment when admin registration is enabled")
+            raise ValueError("ADMIN_SECRET_KEY must be set in production")
         return key or 'change-this-in-production'
     
     @property
     def ADMIN_CODE(self):
         code = os.environ.get('ADMIN_CODE')
         if not code and self.ADMIN_REGISTRATION_ENABLED:
-            raise ValueError("ADMIN_CODE must be set in production environment when admin registration is enabled")
+            raise ValueError("ADMIN_CODE must be set in production")
         return code or 'change-this-in-production'
     
-    # ========== PRODUCTION TWO-FACTOR ==========
     TWO_FACTOR_ENABLED = os.environ.get('TWO_FACTOR_ENABLED', 'True').lower() == 'true'
     TWO_FACTOR_REQUIRED_ROLES = os.environ.get('TWO_FACTOR_REQUIRED_ROLES', 'admin,librarian').split(',')
     
-    # ========== PRODUCTION SOLR SETTINGS ==========
     SOLR_ENABLED = os.environ.get('SOLR_ENABLED', 'True').lower() == 'true'
-    SOLR_URL = os.environ.get('SOLR_URL', 'http://solr:8983/solr/')  # Docker service name
+    SOLR_URL = os.environ.get('SOLR_URL', 'http://solr:8983/solr/')
     SOLR_CORE = os.environ.get('SOLR_CORE', 'nigerian_army_library_prod')
-    SOLR_TIMEOUT = int(os.environ.get('SOLR_TIMEOUT', 30))  # Longer timeout in production
+    SOLR_TIMEOUT = int(os.environ.get('SOLR_TIMEOUT', 30))
     
-    # ========== PRODUCTION CELERY SETTINGS ==========
     CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
     CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
     CELERY_TASK_ALWAYS_EAGER = False
     CELERY_WORKER_CONCURRENCY = int(os.environ.get('CELERY_WORKER_CONCURRENCY', 4))
     CELERY_WORKER_MAX_TASKS_PER_CHILD = int(os.environ.get('CELERY_WORKER_MAX_TASKS_PER_CHILD', 100))
     
-    # ========== PRODUCTION READING SETTINGS ==========
     EXTRACT_PDF_TEXT_FOR_SEARCH = os.environ.get('EXTRACT_PDF_TEXT_FOR_SEARCH', 'True').lower() == 'true'
     PDF_TEXT_EXTRACTION_METHOD = os.environ.get('PDF_TEXT_EXTRACTION_METHOD', 'textract')
     
-    # Stricter access control
     ALLOW_PUBLIC_READING = False
     REQUIRE_LIBRARY_CARD_FOR_READING = True
-    
-    # Security settings
     ALLOW_DOWNLOAD = os.environ.get('ALLOW_DOWNLOAD', 'False').lower() == 'true'
     ALLOW_PRINTING = os.environ.get('ALLOW_PRINTING', 'False').lower() == 'true'
     ALLOW_TEXT_SELECTION = os.environ.get('ALLOW_TEXT_SELECTION', 'True').lower() == 'true'
-    
-    # Limits
     MAX_CONCURRENT_READERS_PER_BOOK = int(os.environ.get('MAX_CONCURRENT_READERS_PER_BOOK', 5))
     READING_TIMEOUT_MINUTES = int(os.environ.get('READING_TIMEOUT_MINUTES', 15))
     
-    # ========== PRODUCTION BACKUP ==========
     BACKUP_ENABLED = os.environ.get('BACKUP_ENABLED', 'True').lower() == 'true'
-    BACKUP_PATH = os.environ.get('BACKUP_PATH', '/var/backups/nael')
+    BACKUP_PATH = os.environ.get('BACKUP_PATH', os.path.join(Config.BASE_DIR, 'backups'))
     BACKUP_RETENTION_DAYS = int(os.environ.get('BACKUP_RETENTION_DAYS', 30))
     
-    # AWS S3 for backups
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
     AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
     
-    # ========== PRODUCTION MONITORING ==========
     SENTRY_DSN = os.environ.get('SENTRY_DSN')
     PROMETHEUS_METRICS = os.environ.get('PROMETHEUS_METRICS', 'True').lower() == 'true'
     
-    # ========== PRODUCTION API ==========
     API_ENABLED = os.environ.get('API_ENABLED', 'True').lower() == 'true'
     API_RATE_LIMIT = os.environ.get('API_RATE_LIMIT', '1000/day;100/hour')
     API_KEY_EXPIRY_DAYS = int(os.environ.get('API_KEY_EXPIRY_DAYS', 365))
     
-    # ========== PRODUCTION WHATSAPP ==========
     @property
     def WHATSAPP_ENABLED(self):
         return os.environ.get('WHATSAPP_ENABLED', 'False').lower() == 'true'
@@ -544,14 +463,14 @@ class ProductionConfig(Config):
     def TWILIO_ACCOUNT_SID(self):
         sid = os.environ.get('TWILIO_ACCOUNT_SID')
         if self.WHATSAPP_ENABLED and not sid:
-            raise ValueError("TWILIO_ACCOUNT_SID must be set in production when WhatsApp is enabled")
+            raise ValueError("TWILIO_ACCOUNT_SID must be set in production")
         return sid
     
     @property
     def TWILIO_AUTH_TOKEN(self):
         token = os.environ.get('TWILIO_AUTH_TOKEN')
         if self.WHATSAPP_ENABLED and not token:
-            raise ValueError("TWILIO_AUTH_TOKEN must be set in production when WhatsApp is enabled")
+            raise ValueError("TWILIO_AUTH_TOKEN must be set in production")
         return token
     
     @property
@@ -560,7 +479,6 @@ class ProductionConfig(Config):
     
     @property
     def WHATSAPP_CONFIGURED(self):
-        """Check if WhatsApp is properly configured in production"""
         if not self.WHATSAPP_ENABLED:
             return False
         return all([
@@ -569,20 +487,18 @@ class ProductionConfig(Config):
             self.TWILIO_WHATSAPP_NUMBER
         ])
     
-    # ========== PRODUCTION NA OAUTH ==========
-    # These MUST be set in production environment variables
     @property
     def NA_OAUTH_CLIENT_ID(self):
         client_id = os.environ.get('NA_OAUTH_CLIENT_ID')
         if not client_id:
-            raise ValueError("NA_OAUTH_CLIENT_ID must be set in production environment")
+            raise ValueError("NA_OAUTH_CLIENT_ID must be set in production")
         return client_id
     
     @property
     def NA_OAUTH_CLIENT_SECRET(self):
         client_secret = os.environ.get('NA_OAUTH_CLIENT_SECRET')
         if not client_secret:
-            raise ValueError("NA_OAUTH_CLIENT_SECRET must be set in production environment")
+            raise ValueError("NA_OAUTH_CLIENT_SECRET must be set in production")
         return client_secret
     
     @property
@@ -603,7 +519,6 @@ class ProductionConfig(Config):
     
     @property
     def NA_OAUTH_CONFIGURED(self):
-        """Check if NA OAuth is properly configured in production"""
         return all([
             os.environ.get('NA_OAUTH_CLIENT_ID'),
             os.environ.get('NA_OAUTH_CLIENT_SECRET')
@@ -611,18 +526,16 @@ class ProductionConfig(Config):
     
     @property
     def SECRET_KEY(self):
-        """Validate SECRET_KEY only when accessed in production"""
         key = os.environ.get('SECRET_KEY')
         if not key:
-            raise ValueError("SECRET_KEY must be set in production environment")
+            raise ValueError("SECRET_KEY must be set in production")
         return key
     
     @property
     def SQLALCHEMY_DATABASE_URI(self):
-        """Validate DATABASE_URL only when accessed in production"""
         uri = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
         if not uri:
-            raise ValueError("DATABASE_URL must be set in production environment")
+            return f"sqlite:///{os.path.join(Config.BASE_DIR, 'library.db')}"
         return uri
 
 
@@ -651,6 +564,10 @@ def get_config(config_name=None):
     os.makedirs(config_instance.COVER_UPLOAD_FOLDER, exist_ok=True)
     os.makedirs(config_instance.SAMPLE_UPLOAD_FOLDER, exist_ok=True)
     os.makedirs(config_instance.BACKUP_FOLDER, exist_ok=True)
-    os.makedirs(os.path.dirname(config_instance.LOG_FILE), exist_ok=True)
+    
+    # Create logs directory
+    log_dir = os.path.dirname(config_instance.LOG_FILE)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
     
     return config_instance
