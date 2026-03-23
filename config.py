@@ -455,23 +455,18 @@ class ProductionConfig(Config):
     API_RATE_LIMIT = os.environ.get('API_RATE_LIMIT', '1000/day;100/hour')
     API_KEY_EXPIRY_DAYS = int(os.environ.get('API_KEY_EXPIRY_DAYS', 365))
     
+    # ========== FIXED: WHATSAPP Configuration - Optional ==========
     @property
     def WHATSAPP_ENABLED(self):
         return os.environ.get('WHATSAPP_ENABLED', 'False').lower() == 'true'
     
     @property
     def TWILIO_ACCOUNT_SID(self):
-        sid = os.environ.get('TWILIO_ACCOUNT_SID')
-        if self.WHATSAPP_ENABLED and not sid:
-            raise ValueError("TWILIO_ACCOUNT_SID must be set in production")
-        return sid
+        return os.environ.get('TWILIO_ACCOUNT_SID')
     
     @property
     def TWILIO_AUTH_TOKEN(self):
-        token = os.environ.get('TWILIO_AUTH_TOKEN')
-        if self.WHATSAPP_ENABLED and not token:
-            raise ValueError("TWILIO_AUTH_TOKEN must be set in production")
-        return token
+        return os.environ.get('TWILIO_AUTH_TOKEN')
     
     @property
     def TWILIO_WHATSAPP_NUMBER(self):
@@ -487,19 +482,14 @@ class ProductionConfig(Config):
             self.TWILIO_WHATSAPP_NUMBER
         ])
     
+    # ========== FIXED: NA OAuth Configuration - Optional ==========
     @property
     def NA_OAUTH_CLIENT_ID(self):
-        client_id = os.environ.get('NA_OAUTH_CLIENT_ID')
-        if not client_id:
-            raise ValueError("NA_OAUTH_CLIENT_ID must be set in production")
-        return client_id
+        return os.environ.get('NA_OAUTH_CLIENT_ID')
     
     @property
     def NA_OAUTH_CLIENT_SECRET(self):
-        client_secret = os.environ.get('NA_OAUTH_CLIENT_SECRET')
-        if not client_secret:
-            raise ValueError("NA_OAUTH_CLIENT_SECRET must be set in production")
-        return client_secret
+        return os.environ.get('NA_OAUTH_CLIENT_SECRET')
     
     @property
     def NA_OAUTH_AUTHORIZATION_URL(self):
@@ -519,11 +509,15 @@ class ProductionConfig(Config):
     
     @property
     def NA_OAUTH_CONFIGURED(self):
+        """Check if NA OAuth is properly configured (optional in production)"""
         return all([
-            os.environ.get('NA_OAUTH_CLIENT_ID'),
-            os.environ.get('NA_OAUTH_CLIENT_SECRET')
+            self.NA_OAUTH_CLIENT_ID,
+            self.NA_OAUTH_CLIENT_SECRET,
+            self.NA_OAUTH_CLIENT_ID != 'your_actual_client_id_from_NA_IT',
+            self.NA_OAUTH_CLIENT_SECRET != 'your_actual_client_secret_from_NA_IT'
         ])
     
+    # ========== SECRET KEY - Required ==========
     @property
     def SECRET_KEY(self):
         key = os.environ.get('SECRET_KEY')
@@ -531,6 +525,7 @@ class ProductionConfig(Config):
             raise ValueError("SECRET_KEY must be set in production")
         return key
     
+    # ========== DATABASE - Optional (will use SQLite if not set) ==========
     @property
     def SQLALCHEMY_DATABASE_URI(self):
         uri = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
