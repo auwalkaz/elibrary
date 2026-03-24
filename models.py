@@ -7,7 +7,8 @@ import base64
 import json
 import secrets
 from io import BytesIO
-from sqlalchemy import event, CheckConstraint, UniqueConstraint, Index
+from sqlalchemy import event, CheckConstraint, UniqueConstraint, Index, JSON
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -118,11 +119,11 @@ class User(db.Model, TimestampMixin, SoftDeleteMixin, AuditMixin):
     # Profile
     profile_picture = db.Column(db.String(255))
     bio = db.Column(db.Text)
-    preferences = db.Column(db.JSON, default={})
+    preferences = db.Column(JSONB, default={})
     
     # Role & Permissions
     role = db.Column(db.String(20), default='user', nullable=False, index=True)  # user, librarian, cataloger, admin
-    permissions = db.Column(db.JSON, default=[])  # Additional permissions
+    permissions = db.Column(JSONB, default=[])  # Additional permissions
     
     # Authentication status
     is_active = db.Column(db.Boolean, default=True, nullable=False)
@@ -143,7 +144,7 @@ class User(db.Model, TimestampMixin, SoftDeleteMixin, AuditMixin):
     # Two-factor authentication
     two_factor_enabled = db.Column(db.Boolean, default=False)
     two_factor_secret = db.Column(db.String(32))
-    two_factor_backup_codes = db.Column(db.JSON)
+    two_factor_backup_codes = db.Column(JSONB)
     two_factor_method = db.Column(db.String(20), default='app')  # app, sms, email
     
     # Approval workflow
@@ -169,7 +170,7 @@ class User(db.Model, TimestampMixin, SoftDeleteMixin, AuditMixin):
     total_fines_waived = db.Column(db.Float, default=0.0)
     
     # Notification settings
-    notification_settings = db.Column(db.JSON, default={
+    notification_settings = db.Column(JSONB, default={
         'email': True,
         'sms': False,
         'push': True,
@@ -568,7 +569,6 @@ class LibraryCard(db.Model, TimestampMixin, AuditMixin, BarcodeMixin):
     # ==================== RELATIONSHIPS ====================
     replaced_by = db.relationship('LibraryCard', remote_side=[id], foreign_keys='LibraryCard.replaced_by_id')
     original_card = db.relationship('LibraryCard', remote_side=[id], foreign_keys='LibraryCard.original_card_id')    
-    # ==================== TABLE ARGS ====================
     
     __table_args__ = (
         Index('idx_cards_number', 'card_number'),
@@ -579,8 +579,6 @@ class LibraryCard(db.Model, TimestampMixin, AuditMixin, BarcodeMixin):
         CheckConstraint('status IN ("active", "expired", "suspended", "lost", "damaged", "replaced")', 
                        name='check_valid_card_status'),
     )
-    
-    # ==================== METHODS ====================
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -728,8 +726,8 @@ class Book(db.Model, TimestampMixin, SoftDeleteMixin, AuditMixin, BarcodeMixin):
     # ==================== CLASSIFICATION ====================
     dewey_decimal = db.Column(db.String(20))
     library_of_congress = db.Column(db.String(50))
-    subjects = db.Column(db.JSON)  # Array of subjects
-    keywords = db.Column(db.JSON)  # Array of keywords
+    subjects = db.Column(JSONB)  # Array of subjects
+    keywords = db.Column(JSONB)  # Array of keywords
     audience = db.Column(db.String(50))  # children, young adult, adult, academic
     
     # ==================== DIGITAL CONTENT ====================
@@ -808,7 +806,7 @@ class Book(db.Model, TimestampMixin, SoftDeleteMixin, AuditMixin, BarcodeMixin):
     requires_special_request = db.Column(db.Boolean, default=False)
     special_request_notes = db.Column(db.Text)
     security_classification = db.Column(db.String(50))  # unclassified, confidential, secret, top_secret
-    approved_roles = db.Column(db.JSON)  # Array of roles that can access
+    approved_roles = db.Column(JSONB)  # Array of roles that can access
     minimum_clearance = db.Column(db.String(20), default='basic')
     
     # ==================== CATALOGING ====================
@@ -1462,8 +1460,8 @@ class Review(db.Model, TimestampMixin):
     # Content
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
-    pros = db.Column(db.JSON)  # Array of pros
-    cons = db.Column(db.JSON)  # Array of cons
+    pros = db.Column(JSONB)  # Array of pros
+    cons = db.Column(JSONB)  # Array of cons
     
     # Status
     status = db.Column(db.String(20), default='published', index=True)  # published, pending, hidden
@@ -2276,7 +2274,7 @@ class RecentActivity(db.Model, TimestampMixin):
     # Additional data
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.String(500))
-    data = db.Column(db.JSON)
+    data = db.Column(JSONB)
     
     __table_args__ = (
         Index('idx_activity_user', 'user_id'),
@@ -2752,7 +2750,7 @@ class CatalogingQueue(db.Model, TimestampMixin):
     # Cataloging metadata
     dewey_decimal = db.Column(db.String(20))
     library_of_congress = db.Column(db.String(50))
-    subjects = db.Column(db.JSON)
+    subjects = db.Column(JSONB)
     summary = db.Column(db.Text)
     contents = db.Column(db.Text)  # Table of contents
     
@@ -3041,7 +3039,7 @@ class Announcement(db.Model, TimestampMixin):
     expires_at = db.Column(db.DateTime)
     
     # Targeting
-    target_roles = db.Column(db.JSON)  # Array of roles to show to
+    target_roles = db.Column(JSONB)  # Array of roles to show to
     is_public = db.Column(db.Boolean, default=True)
     
     # Status
@@ -3131,9 +3129,9 @@ class AuditLog(db.Model):
     method = db.Column(db.String(10))
     
     # Data changes
-    old_values = db.Column(db.JSON)
-    new_values = db.Column(db.JSON)
-    metadata_json = db.Column(db.JSON)
+    old_values = db.Column(JSONB)
+    new_values = db.Column(JSONB)
+    metadata_json = db.Column(JSONB)
     
     # Result
     success = db.Column(db.Boolean, default=True)
@@ -3203,7 +3201,7 @@ class ApiKey(db.Model, TimestampMixin):
     description = db.Column(db.Text)
     
     # Permissions
-    permissions = db.Column(db.JSON)  # Array of allowed endpoints
+    permissions = db.Column(JSONB)  # Array of allowed endpoints
     rate_limit = db.Column(db.String(50))  # e.g., "100/hour"
     
     # Status
@@ -3335,10 +3333,10 @@ class ScheduledReport(db.Model, TimestampMixin):
     time = db.Column(db.Time)
     
     # Parameters
-    parameters = db.Column(db.JSON)
+    parameters = db.Column(JSONB)
     
     # Recipients
-    recipients = db.Column(db.JSON)  # Array of email addresses
+    recipients = db.Column(JSONB)  # Array of email addresses
     
     # Status
     is_active = db.Column(db.Boolean, default=True, index=True)
@@ -3433,7 +3431,7 @@ class Vendor(db.Model, TimestampMixin):
     avg_delivery_days = db.Column(db.Float)
     
     # Categories
-    categories = db.Column(db.JSON)  # Types of materials they supply
+    categories = db.Column(JSONB)  # Types of materials they supply
     
     # Status
     is_active = db.Column(db.Boolean, default=True)
